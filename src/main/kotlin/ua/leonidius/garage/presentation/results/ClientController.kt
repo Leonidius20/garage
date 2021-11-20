@@ -1,6 +1,7 @@
 package ua.leonidius.garage.presentation.results
 
 import org.springframework.web.bind.annotation.*
+import ua.leonidius.garage.business.ClientService
 import ua.leonidius.garage.data.client.Client
 import ua.leonidius.garage.data.client.ClientRepository
 
@@ -8,7 +9,7 @@ data class ClientReturn(val id: String, val name: String,
                         val passportId: String, val email: String)
 
 @RestController
-class ClientController(private val repository: ClientRepository) {
+class ClientController(private val service: ClientService) {
 
     @PutMapping("/client")
     fun addClient(
@@ -16,13 +17,14 @@ class ClientController(private val repository: ClientRepository) {
         @RequestParam(value = "passportId") passportId: String,
         @RequestParam(value = "email") email: String,
     ) {
-        repository.save(Client(name = name, passportId = passportId, email = email))
+        // TODO: validate input
+        service.addClient(name, passportId, email)
     }
 
     @GetMapping("/client/{id}")
     fun getClient(@PathVariable(value="id") id: Long): Client {
-        // TODO: business layer
-        return  repository.findById(id).get()
+        // TODO: validate input
+        return service.getClientById(id)
     }
 
 }
