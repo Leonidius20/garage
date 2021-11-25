@@ -2,6 +2,7 @@ package ua.leonidius.garage.business
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import ua.leonidius.garage.business.network.GetService
 import ua.leonidius.garage.data.car_details.CarDetail
 import ua.leonidius.garage.data.car_details.CarDetailRepository
 import ua.leonidius.garage.presentation.results.CarDetailReturnResult
@@ -18,16 +19,22 @@ class SearchFacadeImpl : SearchFacade {
     @Autowired
     private lateinit var repository: CarDetailRepository
 
+    private val getService = GetService()
+
     override fun getAllDetails(): SearchReturnResult {
-        val results = mutableListOf<CarDetail>()
+        val results = mutableListOf<CarDetailReturnResult>()
 
-        results.addAll(repository.findAll())
-
-        // TODO: search in other 2 services
-
-        return SearchReturnResult(results.map {
+        results.addAll(repository.findAll().map {
             CarDetailReturnResult(it.id!!, it.price, it.name, it.description, it.manufacturer)
-        }.toMutableList())
+        })
+
+        results.addAll(
+            getService.get(
+                "https://powerful-cliffs-34452.herokuapp.com/price-list"
+            ).results
+        )
+
+        return SearchReturnResult(results.toMutableList())
     }
 
     override fun findDetailsByNameWithFilter(
@@ -37,7 +44,7 @@ class SearchFacadeImpl : SearchFacade {
         val notEmptyValidator = NotEmptyValidator()
         val minLengthValidator = MinLengthValidator(3)
         val illegalCharsValidator = IllegalCharsValidator()
-        val searchHandler = SearchHandler(repository)
+        val searchHandler = SearchHandler(repository, getService)
 
         notEmptyValidator.setNext(minLengthValidator)
         minLengthValidator.setNext(illegalCharsValidator)
@@ -68,20 +75,29 @@ class SearchFacadeImpl : SearchFacade {
         if (id < 1)
             throw IllegalArgumentException("Detail ID cannot be smaller than 1")
 
-        val results = mutableListOf<CarDetail>()
+        val results = mutableListOf<CarDetailReturnResult>()
 
-        results.add(repository.getById(id))
+        val local = repository.findById(id)
+        if (local.isPresent) {
+            results.add(
+                CarDetailReturnResult(local.get().id!!,
+                    local.get().price, local.get().name, local.get().description,
+                    local.get().manufacturer)
+            )
+        }
 
-        // TODO: 2 more services
+        results.add(
+            getService.getOne(
+                "https://powerful-cliffs-34452.herokuapp.com/details/$id"
+            )
+        )
 
         results.retainAll { it.id == id }
 
         if (results.isEmpty())
             throw IllegalArgumentException("No detail with such ID")
 
-        return results.map {
-            CarDetailReturnResult(it.id!!, it.price, it.name, it.description, it.manufacturer)
-        }[0]
+        return results[0]
     }
 
 }
