@@ -13,7 +13,7 @@ import ua.leonidius.garage.business.specifications.сoncrete.MaxPriceSpecificati
 @RestController
 class CarDetailsController(private val searchFacade: SearchFacade) {
 
-    @CrossOrigin(origins = ["http://localhost:8080"])
+    @CrossOrigin
     @PostMapping("/details")
     fun addCarDetail(
         @RequestParam name: String,
@@ -25,7 +25,7 @@ class CarDetailsController(private val searchFacade: SearchFacade) {
         searchFacade.addCarDetail(name, manufacturer, description, price, type)
     }
 
-    @CrossOrigin(origins = ["http://localhost:8080"])
+    @CrossOrigin
     @GetMapping("/details/{id}")
     fun getDetailById(@PathVariable id: Int): ReturnResult {
         try {
@@ -36,7 +36,7 @@ class CarDetailsController(private val searchFacade: SearchFacade) {
         }
     }
 
-    @CrossOrigin(origins = ["http://localhost:8080"])
+    @CrossOrigin
     @GetMapping("/details")
     fun getAllDetails(): ReturnResult {
         try {
@@ -47,7 +47,7 @@ class CarDetailsController(private val searchFacade: SearchFacade) {
         }
     }
 
-    @CrossOrigin(origins = ["http://localhost:8080"])
+    @CrossOrigin
     @GetMapping("/details/search")
     fun searchForDetailsWithFilters(
         @RequestParam query: String,
