@@ -86,11 +86,13 @@ class SearchFacadeImpl : SearchFacade {
             )
         }
 
-        results.add(
-            getService.getOne(
+
+        try {
+            results.add(getService.getOne(
                 "https://powerful-cliffs-34452.herokuapp.com/details/$id"
-            )
-        )
+            ))
+        } catch (e: Exception) { // can't convert
+        }
 
         results.retainAll { it.id == id }
 
