@@ -22,7 +22,7 @@ class SearchHandler(private val repository: CarDetailRepository,
         resultSet.addAll(
             getService.get(
                 "https://powerful-cliffs-34452.herokuapp.com/price-list"
-            ).results.filter { query.toRegex().containsMatchIn(it.name) }
+            ).results.filter { query.toRegex(RegexOption.IGNORE_CASE).containsMatchIn(it.name) }
         )
 
         return getNext()?.handleSearchQuery(query) ?: SearchReturnResult(resultSet)
