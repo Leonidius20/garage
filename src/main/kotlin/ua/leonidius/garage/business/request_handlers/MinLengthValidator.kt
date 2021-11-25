@@ -1,0 +1,14 @@
+package ua.leonidius.garage.business.request_handlers
+
+import ua.leonidius.garage.business.request_handlers.BaseHandler
+import ua.leonidius.garage.presentation.results.SearchReturnResult
+
+class MinLengthValidator(private val minLength: Int): BaseHandler() {
+
+    override fun handleSearchQuery(query: String): SearchReturnResult {
+        if (query.length < minLength)
+            throw IllegalArgumentException("The search query should be at least $minLength symbols long")
+        else return getNext()?.handleSearchQuery(query) ?: throw Exception("No handler after validator")
+    }
+
+}
