@@ -17,4 +17,6 @@ interface SearchFacade {
 
     fun getDetailById(id: Int): CarDetailReturnResult
 
+    fun deleteDetail(id: Int)
+
 }

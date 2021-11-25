@@ -26,6 +26,12 @@ class CarDetailsController(private val searchFacade: SearchFacade) {
     }
 
     @CrossOrigin
+    @DeleteMapping("details/{id}")
+    fun deleteDetail(@PathVariable id: Int) {
+        searchFacade.deleteDetail(id)
+    }
+
+    @CrossOrigin
     @GetMapping("/details/{id}")
     fun getDetailById(@PathVariable id: Int): ReturnResult {
         try {

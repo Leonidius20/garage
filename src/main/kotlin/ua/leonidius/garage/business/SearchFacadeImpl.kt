@@ -102,4 +102,12 @@ class SearchFacadeImpl : SearchFacade {
         return results[0]
     }
 
+    override fun deleteDetail(id: Int) {
+        try {
+            repository.deleteById(id)
+        } catch (e: Exception) {
+            // nothing
+        }
+    }
+
 }
