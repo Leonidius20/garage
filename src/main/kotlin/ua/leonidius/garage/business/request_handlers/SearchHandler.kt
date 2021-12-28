@@ -5,7 +5,7 @@ import ua.leonidius.garage.data.car_details.CarDetailRepository
 import ua.leonidius.garage.presentation.results.CarDetailReturnResult
 import ua.leonidius.garage.presentation.results.SearchReturnResult
 
-class SearchHandler(private val repository: CarDetailRepository,
+/*class SearchHandler(private val repository: CarDetailRepository,
                     private val getService: GetService): BaseHandler() {
 
     override fun handleSearchQuery(query: String): SearchReturnResult {
@@ -28,4 +28,4 @@ class SearchHandler(private val repository: CarDetailRepository,
         return getNext()?.handleSearchQuery(query) ?: SearchReturnResult(resultSet)
     }
 
-}
+}*/

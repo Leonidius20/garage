@@ -9,6 +9,7 @@ import ua.leonidius.garage.business.specifications.Specification
 import ua.leonidius.garage.business.specifications.TrueSpecification
 import ua.leonidius.garage.business.specifications.сoncrete.ManufacturerSpecification
 import ua.leonidius.garage.business.specifications.сoncrete.MaxPriceSpecification
+import ua.leonidius.garage.presentation.results.SearchReturnResult
 
 @RestController
 class CarDetailsController(private val searchFacade: SearchFacade) {
@@ -32,8 +33,8 @@ class CarDetailsController(private val searchFacade: SearchFacade) {
     }
 
     @CrossOrigin
-    @GetMapping("/details/{id}")
-    fun getDetailById(@PathVariable id: Int): ReturnResult {
+    @GetMapping("/detail")
+    fun getDetailById(@RequestParam id: String): ReturnResult {
         try {
             return searchFacade.getDetailById(id)
         } catch (e: Exception) {
@@ -44,9 +45,9 @@ class CarDetailsController(private val searchFacade: SearchFacade) {
 
     @CrossOrigin
     @GetMapping("/details")
-    fun getAllDetails(): ReturnResult {
+    fun getAllDetails(@RequestParam page: Int): ReturnResult {
         try {
-            return searchFacade.getAllDetails()
+            return SearchReturnResult(searchFacade.getAllDetails(page))
         } catch (e: Exception) {
             e.printStackTrace()
             return ErrorReturnResult(e.message!!)
@@ -57,23 +58,11 @@ class CarDetailsController(private val searchFacade: SearchFacade) {
     @GetMapping("/details/search")
     fun searchForDetailsWithFilters(
         @RequestParam query: String,
-        @RequestParam(required = false) maxPrice: Double?,
-        @RequestParam(required = false) minPrice: Double?,
-        @RequestParam(required = false) manufacturer: String?
+
     ): ReturnResult {
         try {
-            var filter: Specification<CarDetailReturnResult> = TrueSpecification()
 
-            if (maxPrice != null)
-                filter = filter.and(MaxPriceSpecification(maxPrice))
-
-            if (minPrice != null)
-                filter = filter.and(MaxPriceSpecification(minPrice).not())
-
-            if (manufacturer != null)
-                filter = filter.and(ManufacturerSpecification(manufacturer))
-
-            return searchFacade.findDetailsByNameWithFilter(query, filter)
+            return searchFacade.findDetailsByNameWithFilter(query)
         } catch (e: Exception) {
             e.printStackTrace()
             return ErrorReturnResult(e.message!!)

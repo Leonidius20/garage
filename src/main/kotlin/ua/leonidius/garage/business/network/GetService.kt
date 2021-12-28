@@ -1,15 +1,21 @@
 package ua.leonidius.garage.business.network
 
 import org.springframework.boot.web.client.RestTemplateBuilder
+import org.springframework.scheduling.annotation.Async
+import org.springframework.stereotype.Service
 import ua.leonidius.garage.presentation.results.CarDetailReturnResult
 import ua.leonidius.garage.presentation.results.SearchReturnResult
+import java.util.concurrent.CompletableFuture
 
-class GetService {
+@Service
+open class GetService {
 
     private val restTemplate = RestTemplateBuilder().build()
 
-    fun get(url: String): SearchReturnResult {
-        return restTemplate.getForObject(url, SearchReturnResult::class.java)!!
+    @Async
+    open fun get(url: String): CompletableFuture<SearchReturnResult> {
+        return CompletableFuture.completedFuture(
+            restTemplate.getForObject(url, SearchReturnResult::class.java)!!)
     }
 
     fun getOne(url: String): CarDetailReturnResult {

@@ -1,17 +1,18 @@
 package ua.leonidius.garage.business
 
+import de.qaware.tools.collectioncacheableforspring.CollectionCacheable
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cache.annotation.CacheEvict
+import org.springframework.cache.annotation.Cacheable
+import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
+import org.springframework.web.bind.annotation.CrossOrigin
+import ua.leonidius.garage.GarageApplication
 import ua.leonidius.garage.business.network.GetService
 import ua.leonidius.garage.data.car_details.CarDetail
 import ua.leonidius.garage.data.car_details.CarDetailRepository
 import ua.leonidius.garage.presentation.results.CarDetailReturnResult
 import ua.leonidius.garage.presentation.results.SearchReturnResult
-import ua.leonidius.garage.business.request_handlers.IllegalCharsValidator
-import ua.leonidius.garage.business.request_handlers.MinLengthValidator
-import ua.leonidius.garage.business.request_handlers.NotEmptyValidator
-import ua.leonidius.garage.business.request_handlers.SearchHandler
-import ua.leonidius.garage.business.specifications.Specification
 
 @Service
 class SearchFacadeImpl : SearchFacade {
@@ -21,39 +22,75 @@ class SearchFacadeImpl : SearchFacade {
 
     private val getService = GetService()
 
-    override fun getAllDetails(): SearchReturnResult {
-        val results = mutableListOf<CarDetailReturnResult>()
+    private var currentPage = 0
 
-        results.addAll(repository.findAll().map {
-            CarDetailReturnResult(it.id!!, it.price, it.name, it.description, it.manufacturer)
-        })
-
-        results.addAll(
-            getService.get(
-                "https://powerful-cliffs-34452.herokuapp.com/price-list"
-            ).results
-        )
-
-        return SearchReturnResult(results.toMutableList())
+    override fun getAllDetails(page: Int): Collection<CarDetailReturnResult> {
+        currentPage = page
+        return getAllDetails().values
     }
 
+    // @CollectionCacheable(cacheNames = ["details"])
+    fun getAllDetails(): Map<String, CarDetailReturnResult> {
+
+        if (GarageApplication.pageCache.containsKey(currentPage)) {
+            return GarageApplication.pageCache.get(currentPage)!!
+        }
+
+
+        val results = mutableMapOf<String, CarDetailReturnResult>()
+
+        results.putAll ( // slow service
+            getService.get(
+                "http://localhost:8088/price-list?page=$currentPage"
+            ).get().results.associate { Pair("${it.id}-8088", it.apply { source = "8088" }) }
+                .also { GarageApplication.cache.putAll(it) }
+        )
+
+
+        val res = repository.findAll(PageRequest.of(currentPage, 5)).map {
+            CarDetailReturnResult(it.id!!, it.price, it.name, it.description, it.manufacturer, "local")
+        }.associateBy { "${it.id}-local" }
+            .also { GarageApplication.cache.putAll(it) }
+
+
+        results.putAll( // 5000 service
+            getService.get(
+                "http://localhost:8082/details?page=${currentPage % 500}" // TODO: get only 10 results
+            ).get().results.associate { Pair("${it.id}-8082", it.apply { source = "8082" }) }
+        )
+
+        GarageApplication.pageCache.put(currentPage, results)
+
+        return  results
+    }
+
+    @Cacheable("results")
     override fun findDetailsByNameWithFilter(
-        name: String, filter: Specification<CarDetailReturnResult>
+        name: String
     ): SearchReturnResult {
 
-        val notEmptyValidator = NotEmptyValidator()
-        val minLengthValidator = MinLengthValidator(3)
-        val illegalCharsValidator = IllegalCharsValidator()
-        val searchHandler = SearchHandler(repository, getService)
+        if (GarageApplication.searchCache.containsKey(name)) {
+            return SearchReturnResult(GarageApplication.searchCache[name]!!.values)
+        }
 
-        notEmptyValidator.setNext(minLengthValidator)
-        minLengthValidator.setNext(illegalCharsValidator)
-        illegalCharsValidator.setNext(searchHandler)
+        val results = mutableMapOf<String, CarDetailReturnResult>()
 
-        val results = notEmptyValidator.handleSearchQuery(name)
+        results.putAll ( // slow service
+            getService.get(
+                "http://localhost:8088/search?query=$name"
+            ).get().results.associate { Pair("${it.id}-8088", it.apply { source = "8088" }) }
+                .also { GarageApplication.cache.putAll(it) }
+        )
 
-        results.results.retainAll { filter.isSatisfiedBy(it) }
-        return results
+        results.putAll(repository.findAll(PageRequest.of(currentPage, 5)).map {
+            CarDetailReturnResult(it.id!!, it.price, it.name, it.description, it.manufacturer, "local")
+        }.associateBy { "${it.id}-local" }
+            .also { GarageApplication.cache.putAll(it) })
+
+        GarageApplication.searchCache[name] = results
+
+
+        return SearchReturnResult(results.values)
     }
 
     override fun addCarDetail(
@@ -71,30 +108,41 @@ class SearchFacadeImpl : SearchFacade {
         repository.save(detail)
     }
 
-    override fun getDetailById(id: Int): CarDetailReturnResult {
-        if (id < 1)
-            throw IllegalArgumentException("Detail ID cannot be smaller than 1")
+    // @Cacheable(cacheNames = ["details"])
+    override fun getDetailById(id: String): CarDetailReturnResult {
+        val sourceAndId = id.split("-")
+        val source = sourceAndId[1]
+        val idInt = sourceAndId[0].toInt()
+
+        if (GarageApplication.cache.containsKey(id)) {
+            return GarageApplication.cache.get(id)!!
+        }
+
+        // TODO: ckeck the right source
+        if (source == "8088") {
+            return getService.getOne(
+                "http://localhost:8088/details/${idInt}"
+            )
+        }
+
+        /*if (source == "8082") {
+            return getService.getOne(
+                "http://localhost:8082/details/${idInt}"
+            )
+        }*/
 
         val results = mutableListOf<CarDetailReturnResult>()
 
-        val local = repository.findById(id)
+        val local = repository.findById(idInt)
         if (local.isPresent) {
             results.add(
                 CarDetailReturnResult(local.get().id!!,
                     local.get().price, local.get().name, local.get().description,
-                    local.get().manufacturer)
+                    local.get().manufacturer, "local")
             )
         }
 
-
-        try {
-            results.add(getService.getOne(
-                "https://powerful-cliffs-34452.herokuapp.com/details/$id"
-            ))
-        } catch (e: Exception) { // can't convert
-        }
-
-        results.retainAll { it.id == id }
+        results.retainAll { it.id == idInt }
 
         if (results.isEmpty())
             throw IllegalArgumentException("No detail with such ID")
@@ -102,6 +150,7 @@ class SearchFacadeImpl : SearchFacade {
         return results[0]
     }
 
+    @CacheEvict("results", allEntries = true)
     override fun deleteDetail(id: Int) {
         try {
             repository.deleteById(id)

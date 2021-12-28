@@ -20,7 +20,7 @@ class CarDetail(
 
     var manufacturer: String,
 
-    var description: String,
+    var description: String?,
 
     var price: Double,
 

@@ -6,16 +6,16 @@ import ua.leonidius.garage.business.specifications.Specification
 
 interface SearchFacade {
 
-    fun getAllDetails(): SearchReturnResult
+    fun getAllDetails(page: Int = 0): Collection<CarDetailReturnResult>
 
     fun findDetailsByNameWithFilter(
-        name: String, filter: Specification<CarDetailReturnResult>
+        name: String
     ): SearchReturnResult
 
     fun addCarDetail(name: String, manufacturer: String,
                      description: String, price: Double, type: String)
 
-    fun getDetailById(id: Int): CarDetailReturnResult
+    fun getDetailById(id: String): CarDetailReturnResult
 
     fun deleteDetail(id: Int)
 
