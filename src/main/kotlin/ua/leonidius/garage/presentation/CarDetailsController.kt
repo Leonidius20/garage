@@ -71,4 +71,9 @@ class CarDetailsController(private val searchFacade: SearchFacade) {
         return searchFacade.findDetailsCached(query)
     }
 
+    @GetMapping("/random")
+    fun random() {
+        searchFacade.generateRandomCarDetails()
+    }
+
 }

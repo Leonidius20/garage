@@ -1,13 +1,19 @@
 type Query {
-    detailById(id: ID): Detail
-    details(count: Int): [Detail]
+    detailById(id: ID): CarDetail
+    details(count: Int): [CarDetail]
 }
 
-type Detail {
+type Mutation {
+    createDetail(name: String!, manufacturer: String, description: String, type: String, price: Float): CarDetail
+}
+
+type CarDetail {
     id: ID
     name: String
     description: String
     price: Float
+    manufacturer: String
+    type: String
 }
 
 type Author {

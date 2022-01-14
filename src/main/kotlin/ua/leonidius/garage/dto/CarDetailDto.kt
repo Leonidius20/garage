@@ -6,5 +6,6 @@ data class CarDetailDto(
     val name: String,
     val description: String?,
     val manufacturer: String,
+    val type: String?,
     var source: String?,
 ): ReturnResult

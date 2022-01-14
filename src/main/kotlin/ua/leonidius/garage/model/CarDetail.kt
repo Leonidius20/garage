@@ -5,7 +5,7 @@ import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
 
-@Entity(name = "car_details")
+@Entity(name = "car_detail")
 class CarDetail(
 
     @Id

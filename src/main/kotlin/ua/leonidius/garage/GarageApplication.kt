@@ -10,6 +10,7 @@ import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 import org.springframework.web.filter.CorsFilter
 import ua.leonidius.garage.dto.CarDetailDto
+import ua.leonidius.garage.graphql.car_detail.CarDetailQuery
 import java.time.LocalDate
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -58,5 +59,5 @@ class GarageApplication {
 
 fun main(args: Array<String>) {
 	runApplication<GarageApplication>(*args)
-	val x = GraphQLProvider()
+	val x = CarDetailQuery()
 }

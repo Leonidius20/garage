@@ -12,14 +12,20 @@ import ua.leonidius.garage.business.network.GetService
 import ua.leonidius.garage.repository.CarDetailRepository
 import ua.leonidius.garage.dto.CarDetailDto
 import ua.leonidius.garage.dto.SearchReturnResult
+import ua.leonidius.garage.mappers.CarDetailMapper
+import ua.leonidius.garage.model.CarDetail
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
+import kotlin.random.Random
 
 @Service
 class SearchFacadeImpl : SearchFacade {
 
     @Autowired
     private lateinit var repository: CarDetailRepository
+
+    @Autowired
+    private lateinit var detailMapper: CarDetailMapper
 
     private val getService = GetService()
 
@@ -47,7 +53,7 @@ class SearchFacadeImpl : SearchFacade {
                 launch(Dispatchers.IO) {
                     // local results
                     results.addAll(repository.findAll(PageRequest.of(page, 5)).map {
-                        CarDetailDto(it.id!!, it.price, it.name, it.description, it.manufacturer, "local")
+                        detailMapper.toDto(it, "local")
                     })
                 },
                 launch(Dispatchers.IO) {
@@ -93,7 +99,7 @@ class SearchFacadeImpl : SearchFacade {
                 },
                 launch(Dispatchers.IO) {
                     results.addAll(repository.findByNameContainingIgnoreCase(name).map {
-                        CarDetailDto(it.id!!, it.price, it.name, it.description, it.manufacturer, "local")
+                        detailMapper.toDto(it, "local")
                     })
                 },
             )
@@ -115,6 +121,10 @@ class SearchFacadeImpl : SearchFacade {
             it.value.second.name.startsWith(query, ignoreCase = true) }
             .map { it.value.second }
         return SearchReturnResult(results)
+    }
+
+    override fun getLocalDetailById(id: Int): CarDetailDto {
+        return getDetailById("${id}-local")
     }
 
     override fun getDetailById(id: String): CarDetailDto {
@@ -140,9 +150,7 @@ class SearchFacadeImpl : SearchFacade {
         } else if (source == "local") {
             val local = repository.findById(idInt)
             if (local.isPresent) {
-                return CarDetailDto(local.get().id!!,
-                    local.get().price, local.get().name, local.get().description,
-                    local.get().manufacturer, "local").also {
+                return detailMapper.toDto(local.get(), "local").also {
                         GarageApplication.cache.put(id, Pair(LocalDate.now(), it))
                     }
             } else throw IllegalArgumentException("No detail with such ID")
@@ -158,21 +166,56 @@ class SearchFacadeImpl : SearchFacade {
         }
     }*/
 
-    /*override fun addCarDetail(
+    override fun addCarDetail(
        name: String, manufacturer: String,
-       description: String, price: Double, type: String,
-   ) {
+       description: String, price: Float, type: String,
+   ): CarDetailDto {
        val detail = CarDetail.Builder()
            .setDetailCustomType(type)
            .setName(name)
            .setManufacturer(manufacturer)
            .setDescription(description)
-           .setPrice(price)
+           .setPrice(price.toDouble())
            .get()
 
-       repository.save(detail)
-   }*/
+       return detailMapper.toDto(repository.save(detail), "local")
+   }
+
+    override fun generateRandomCarDetails() {
+
+        val charPool : List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
+
+        fun randomString() = (1..10)
+            .map { i -> kotlin.random.Random.nextInt(0, charPool.size) }
+            .map(charPool::get)
+            .joinToString("")
 
 
+        val remaining = 100000 - 57847
+
+        var i = 1
+
+        repeat(50) {
+            val data = mutableListOf<CarDetail>()
+            repeat(1000) {
+                data.add(CarDetail(carTypeId = 1, manufacturer = randomString(), price = Random.nextInt(15, 999).toDouble(), name = randomString(), description = randomString()))
+            }
+            repository.saveAll(data)
+            println("Saved another 1000 (${i++} out of 50")
+        }
+
+
+        /*repeat(100000) {
+            repository.save(
+                CarDetail.Builder()
+                    .setCarTypeId(1)
+                    .setManufacturer(randomString())
+                    .setPrice(Random.nextDouble(15.0, 999.0))
+                    .setName(randomString())
+                    .setDescription(randomString())
+                    .get()
+            )
+        }*/
+    }
 
 }

@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-@Component
+/*@Component
 public class GraphQLDataFetchers {
 
     private static List<Map<String, String>> books = Arrays.asList(
@@ -38,7 +38,7 @@ public class GraphQLDataFetchers {
                     "lastName", "Rice")
     );
 
-    public DataFetcher getBookByIdDataFetcher() {
+    public DataFetcher getDetailByIdDataFetcher() {
         return dataFetchingEnvironment -> {
             String bookId = dataFetchingEnvironment.getArgument("id");
             return books
@@ -49,7 +49,7 @@ public class GraphQLDataFetchers {
         };
     }
 
-    public DataFetcher getAuthorDataFetcher() {
+    public DataFetcher getDetailsDataFetcher() {
         return dataFetchingEnvironment -> {
             Map<String,String> book = dataFetchingEnvironment.getSource();
             String authorId = book.get("authorId");
@@ -60,4 +60,4 @@ public class GraphQLDataFetchers {
                     .orElse(null);
         };
     }
-}
+}*/
