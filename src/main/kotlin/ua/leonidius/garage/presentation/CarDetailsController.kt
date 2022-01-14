@@ -32,7 +32,9 @@ class CarDetailsController(private val searchFacade: SearchFacade) {
     @GetMapping("/detail")
     fun getDetailById(@RequestParam id: String): ReturnResult {
         try {
-            return searchFacade.getDetailById(id)
+            val result = searchFacade.getDetailById(id)
+            if (result == null) return ErrorDto("not found")
+            else return result
         } catch (e: Exception) {
             e.printStackTrace()
             return ErrorDto(e.message!!)
@@ -69,11 +71,6 @@ class CarDetailsController(private val searchFacade: SearchFacade) {
     @GetMapping("search-cached-details")
     fun searchCachedDetails(@RequestParam query: String): ReturnResult {
         return searchFacade.findDetailsCached(query)
-    }
-
-    @GetMapping("/random")
-    fun random() {
-        searchFacade.generateRandomCarDetails()
     }
 
 }

@@ -17,4 +17,9 @@ class CarDetailMutation: GraphQLMutationResolver {
         return detailService.addCarDetail(name, manufacturer, description, price, type)
     }
 
+    fun deleteDetail(id: Int): Int {
+        detailService.deleteDetail(id)
+        return id
+    }
+
 }

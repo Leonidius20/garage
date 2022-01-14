@@ -1,0 +1,17 @@
+query GetById {
+  detailById(id: 107849){
+    id
+    name
+    manufacturer
+    type
+
+
+  }
+}
+
+mutation Create {
+  createDetail(name: "test", manufacturer: "manufucturer", description: "", type: "transmission", price: 3000)
+  {
+    id
+  }
+}

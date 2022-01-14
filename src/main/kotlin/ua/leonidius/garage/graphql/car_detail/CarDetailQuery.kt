@@ -18,7 +18,9 @@ class CarDetailQuery : GraphQLQueryResolver {
     }
 
     fun getDetailById(id: Int): Optional<CarDetailDto> {
-        return Optional.of(detailService.getLocalDetailById(id))
+        val value = detailService.getLocalDetailById(id)
+        if (value == null) return Optional.empty()
+        else return Optional.of(value)
     }
 
 }

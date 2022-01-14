@@ -123,11 +123,11 @@ class SearchFacadeImpl : SearchFacade {
         return SearchReturnResult(results)
     }
 
-    override fun getLocalDetailById(id: Int): CarDetailDto {
+    override fun getLocalDetailById(id: Int): CarDetailDto? {
         return getDetailById("${id}-local")
     }
 
-    override fun getDetailById(id: String): CarDetailDto {
+    override fun getDetailById(id: String): CarDetailDto? {
         val sourceAndId = id.split("-")
         val source = sourceAndId[1]
         val idInt = sourceAndId[0].toInt()
@@ -153,18 +153,14 @@ class SearchFacadeImpl : SearchFacade {
                 return detailMapper.toDto(local.get(), "local").also {
                         GarageApplication.cache.put(id, Pair(LocalDate.now(), it))
                     }
-            } else throw IllegalArgumentException("No detail with such ID")
+            } else return null // doesn't exist
         } else throw IllegalArgumentException("Invalid data source ${source}")
     }
 
-    /*
+
     override fun deleteDetail(id: Int) {
-        try {
-            repository.deleteById(id)
-        } catch (e: Exception) {
-            // nothing
-        }
-    }*/
+        repository.deleteById(id)
+    }
 
     override fun addCarDetail(
        name: String, manufacturer: String,
@@ -180,42 +176,5 @@ class SearchFacadeImpl : SearchFacade {
 
        return detailMapper.toDto(repository.save(detail), "local")
    }
-
-    override fun generateRandomCarDetails() {
-
-        val charPool : List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
-
-        fun randomString() = (1..10)
-            .map { i -> kotlin.random.Random.nextInt(0, charPool.size) }
-            .map(charPool::get)
-            .joinToString("")
-
-
-        val remaining = 100000 - 57847
-
-        var i = 1
-
-        repeat(50) {
-            val data = mutableListOf<CarDetail>()
-            repeat(1000) {
-                data.add(CarDetail(carTypeId = 1, manufacturer = randomString(), price = Random.nextInt(15, 999).toDouble(), name = randomString(), description = randomString()))
-            }
-            repository.saveAll(data)
-            println("Saved another 1000 (${i++} out of 50")
-        }
-
-
-        /*repeat(100000) {
-            repository.save(
-                CarDetail.Builder()
-                    .setCarTypeId(1)
-                    .setManufacturer(randomString())
-                    .setPrice(Random.nextDouble(15.0, 999.0))
-                    .setName(randomString())
-                    .setDescription(randomString())
-                    .get()
-            )
-        }*/
-    }
 
 }
