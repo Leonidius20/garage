@@ -9,12 +9,10 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 import org.springframework.web.filter.CorsFilter
-import ua.leonidius.garage.presentation.results.CarDetailReturnResult
+import ua.leonidius.garage.dto.CarDetailDto
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeUnit
 
 
 @EnableAsync
@@ -23,8 +21,8 @@ import java.util.concurrent.TimeUnit
 class GarageApplication {
 
 	companion object {
-		val cache = ConcurrentHashMap<String, Pair<LocalDate, CarDetailReturnResult>>()
-		val pageCache = ConcurrentHashMap<Int, Pair<LocalDate, Collection<CarDetailReturnResult>>>()
+		val cache = ConcurrentHashMap<String, Pair<LocalDate, CarDetailDto>>()
+		val pageCache = ConcurrentHashMap<Int, Pair<LocalDate, Collection<CarDetailDto>>>()
 		// val searchCache = ConcurrentHashMap<String, Pair<LocalDate, Collection<CarDetailReturnResult>>>()
 	}
 

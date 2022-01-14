@@ -1,4 +1,4 @@
-package ua.leonidius.garage.data.car_details
+package ua.leonidius.garage.model
 
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue

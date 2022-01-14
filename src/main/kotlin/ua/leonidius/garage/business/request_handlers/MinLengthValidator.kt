@@ -1,7 +1,6 @@
 package ua.leonidius.garage.business.request_handlers
 
-import ua.leonidius.garage.business.request_handlers.BaseHandler
-import ua.leonidius.garage.presentation.results.SearchReturnResult
+import ua.leonidius.garage.dto.SearchReturnResult
 
 class MinLengthValidator(private val minLength: Int): BaseHandler() {
 

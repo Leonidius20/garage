@@ -1,6 +1,6 @@
 package ua.leonidius.garage.business.request_handlers
 
-import ua.leonidius.garage.presentation.results.SearchReturnResult
+import ua.leonidius.garage.dto.SearchReturnResult
 
 class NotEmptyValidator: BaseHandler() {
 

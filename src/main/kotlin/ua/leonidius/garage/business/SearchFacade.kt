@@ -1,12 +1,11 @@
 package ua.leonidius.garage.business
 
-import ua.leonidius.garage.presentation.results.CarDetailReturnResult
-import ua.leonidius.garage.presentation.results.SearchReturnResult
-import ua.leonidius.garage.business.specifications.Specification
+import ua.leonidius.garage.dto.CarDetailDto
+import ua.leonidius.garage.dto.SearchReturnResult
 
 interface SearchFacade {
 
-    fun getAllDetails(page: Int = 0): Collection<CarDetailReturnResult>
+    fun getAllDetails(page: Int = 0): Collection<CarDetailDto>
 
     fun findDetailsByNameWithFilter(
         name: String
@@ -15,7 +14,7 @@ interface SearchFacade {
     //fun addCarDetail(name: String, manufacturer: String,
     //                 description: String, price: Double, type: String)
 
-    fun getDetailById(id: String): CarDetailReturnResult
+    fun getDetailById(id: String): CarDetailDto
 
     //fun deleteDetail(id: Int)
 

@@ -5,17 +5,15 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import ua.leonidius.garage.GarageApplication
 import ua.leonidius.garage.business.network.GetService
-import ua.leonidius.garage.data.car_details.CarDetailRepository
-import ua.leonidius.garage.presentation.results.CarDetailReturnResult
-import ua.leonidius.garage.presentation.results.SearchReturnResult
+import ua.leonidius.garage.repository.CarDetailRepository
+import ua.leonidius.garage.dto.CarDetailDto
+import ua.leonidius.garage.dto.SearchReturnResult
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
-import java.util.stream.Collectors
 
 @Service
 class SearchFacadeImpl : SearchFacade {
@@ -27,7 +25,7 @@ class SearchFacadeImpl : SearchFacade {
 
     private val SLOW_SERVICE_URL = "http://localhost:8088"
 
-    override fun getAllDetails(page: Int): Collection<CarDetailReturnResult>  {
+    override fun getAllDetails(page: Int): Collection<CarDetailDto>  {
 
         if (GarageApplication.pageCache.containsKey(page)) {
             val entry = GarageApplication.pageCache[page]!!
@@ -36,7 +34,7 @@ class SearchFacadeImpl : SearchFacade {
             }
         }
 
-        val results = java.util.Collections.synchronizedList(mutableListOf<CarDetailReturnResult>())
+        val results = java.util.Collections.synchronizedList(mutableListOf<CarDetailDto>())
 
         runBlocking {
             val tasks = listOf(
@@ -49,7 +47,7 @@ class SearchFacadeImpl : SearchFacade {
                 launch(Dispatchers.IO) {
                     // local results
                     results.addAll(repository.findAll(PageRequest.of(page, 5)).map {
-                        CarDetailReturnResult(it.id!!, it.price, it.name, it.description, it.manufacturer, "local")
+                        CarDetailDto(it.id!!, it.price, it.name, it.description, it.manufacturer, "local")
                     })
                 },
                 launch(Dispatchers.IO) {
@@ -84,7 +82,7 @@ class SearchFacadeImpl : SearchFacade {
             } // else refetch
         }*/
 
-        val results = java.util.Collections.synchronizedList(mutableListOf<CarDetailReturnResult>())
+        val results = java.util.Collections.synchronizedList(mutableListOf<CarDetailDto>())
 
         runBlocking {
             val tasks = listOf(
@@ -95,7 +93,7 @@ class SearchFacadeImpl : SearchFacade {
                 },
                 launch(Dispatchers.IO) {
                     results.addAll(repository.findByNameContainingIgnoreCase(name).map {
-                        CarDetailReturnResult(it.id!!, it.price, it.name, it.description, it.manufacturer, "local")
+                        CarDetailDto(it.id!!, it.price, it.name, it.description, it.manufacturer, "local")
                     })
                 },
             )
@@ -119,7 +117,7 @@ class SearchFacadeImpl : SearchFacade {
         return SearchReturnResult(results)
     }
 
-    override fun getDetailById(id: String): CarDetailReturnResult {
+    override fun getDetailById(id: String): CarDetailDto {
         val sourceAndId = id.split("-")
         val source = sourceAndId[1]
         val idInt = sourceAndId[0].toInt()
@@ -142,7 +140,7 @@ class SearchFacadeImpl : SearchFacade {
         } else if (source == "local") {
             val local = repository.findById(idInt)
             if (local.isPresent) {
-                return CarDetailReturnResult(local.get().id!!,
+                return CarDetailDto(local.get().id!!,
                     local.get().price, local.get().name, local.get().description,
                     local.get().manufacturer, "local").also {
                         GarageApplication.cache.put(id, Pair(LocalDate.now(), it))

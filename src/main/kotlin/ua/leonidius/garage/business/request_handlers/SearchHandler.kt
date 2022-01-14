@@ -1,10 +1,5 @@
 package ua.leonidius.garage.business.request_handlers
 
-import ua.leonidius.garage.business.network.GetService
-import ua.leonidius.garage.data.car_details.CarDetailRepository
-import ua.leonidius.garage.presentation.results.CarDetailReturnResult
-import ua.leonidius.garage.presentation.results.SearchReturnResult
-
 /*class SearchHandler(private val repository: CarDetailRepository,
                     private val getService: GetService): BaseHandler() {
 

@@ -1,15 +1,11 @@
 package ua.leonidius.garage.presentation
 
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import ua.leonidius.garage.presentation.results.CarDetailReturnResult
-import ua.leonidius.garage.presentation.results.ErrorReturnResult
-import ua.leonidius.garage.presentation.results.ReturnResult
+import ua.leonidius.garage.dto.ErrorDto
+import ua.leonidius.garage.dto.ReturnResult
 import ua.leonidius.garage.business.SearchFacade
-import ua.leonidius.garage.business.specifications.Specification
-import ua.leonidius.garage.business.specifications.TrueSpecification
-import ua.leonidius.garage.business.specifications.сoncrete.ManufacturerSpecification
-import ua.leonidius.garage.business.specifications.сoncrete.MaxPriceSpecification
-import ua.leonidius.garage.presentation.results.SearchReturnResult
 
 @RestController
 @CrossOrigin(origins = ["*"])
@@ -40,18 +36,18 @@ class CarDetailsController(private val searchFacade: SearchFacade) {
             return searchFacade.getDetailById(id)
         } catch (e: Exception) {
             e.printStackTrace()
-            return ErrorReturnResult(e.message!!)
+            return ErrorDto(e.message!!)
         }
     }
 
     @CrossOrigin
     @GetMapping("/details")
-    fun getAllDetails(@RequestParam page: Int): ReturnResult {
+    fun getAllDetails(@RequestParam page: Int): ResponseEntity<Any> {
         try {
-            return SearchReturnResult(searchFacade.getAllDetails(page))
+            return ResponseEntity.ok(searchFacade.getAllDetails(page))
         } catch (e: Exception) {
             e.printStackTrace()
-            return ErrorReturnResult(e.message!!)
+            return ResponseEntity(ErrorDto(e.message!!), HttpStatus.INTERNAL_SERVER_ERROR)
         }
     }
 
@@ -66,7 +62,7 @@ class CarDetailsController(private val searchFacade: SearchFacade) {
             return searchFacade.findDetailsByNameWithFilter(query)
         } catch (e: Exception) {
             e.printStackTrace()
-            return ErrorReturnResult(e.message!!)
+            return ErrorDto(e.message!!)
         }
     }
 
