@@ -25,14 +25,14 @@ class GarageApplication {
 	companion object {
 		val cache = ConcurrentHashMap<String, Pair<LocalDate, CarDetailReturnResult>>()
 		val pageCache = ConcurrentHashMap<Int, Pair<LocalDate, Collection<CarDetailReturnResult>>>()
-		val searchCache = ConcurrentHashMap<String, Pair<LocalDate, Collection<CarDetailReturnResult>>>()
+		// val searchCache = ConcurrentHashMap<String, Pair<LocalDate, Collection<CarDetailReturnResult>>>()
 	}
 
 	@Scheduled(fixedDelay = 86400000, initialDelay = 0) // fixedDelay = 24h
 	fun clearOldCache() {
 		cache.clear()
 		pageCache.clear()
-		searchCache.clear()
+		// searchCache.clear()
 	}
 
 	@Scheduled(fixedDelay = 3600000, initialDelay = 3600000) // every hour

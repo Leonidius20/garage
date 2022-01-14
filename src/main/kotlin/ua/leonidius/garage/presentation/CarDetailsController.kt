@@ -70,4 +70,10 @@ class CarDetailsController(private val searchFacade: SearchFacade) {
         }
     }
 
+    @CrossOrigin
+    @GetMapping("search-cached-details")
+    fun searchCachedDetails(@RequestParam query: String): ReturnResult {
+        return searchFacade.findDetailsCached(query)
+    }
+
 }

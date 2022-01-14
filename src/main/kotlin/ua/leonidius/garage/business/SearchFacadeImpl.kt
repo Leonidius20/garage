@@ -73,17 +73,16 @@ class SearchFacadeImpl : SearchFacade {
         return  results
     }
 
-    @Cacheable("results")
     override fun findDetailsByNameWithFilter(
         name: String
     ): SearchReturnResult {
 
-        if (GarageApplication.searchCache.containsKey(name)) {
+        /*if (GarageApplication.searchCache.containsKey(name)) {
             val entry = GarageApplication.searchCache[name]!!
             if (ChronoUnit.DAYS.between(LocalDate.now(), entry.first) <= 1) {
                 return SearchReturnResult(entry.second)
             } // else refetch
-        }
+        }*/
 
         val results = java.util.Collections.synchronizedList(mutableListOf<CarDetailReturnResult>())
 
@@ -107,8 +106,16 @@ class SearchFacadeImpl : SearchFacade {
             results.map { Pair(LocalDate.now(), it) }
                 .associateBy { "${it.second.id}-${it.second.source}" })
 
-        GarageApplication.searchCache[name] = Pair(LocalDate.now(), results)
+        // GarageApplication.searchCache[name] = Pair(LocalDate.now(), results)
 
+        return SearchReturnResult(results)
+    }
+
+    override fun findDetailsCached(name: String): SearchReturnResult {
+        val query = name.trim()
+        val results = GarageApplication.cache.filter {
+            it.value.second.name.startsWith(query, ignoreCase = true) }
+            .map { it.value.second }
         return SearchReturnResult(results)
     }
 

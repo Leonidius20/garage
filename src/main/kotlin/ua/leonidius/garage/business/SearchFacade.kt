@@ -19,4 +19,6 @@ interface SearchFacade {
 
     //fun deleteDetail(id: Int)
 
+    fun findDetailsCached(name: String): SearchReturnResult
+
 }
