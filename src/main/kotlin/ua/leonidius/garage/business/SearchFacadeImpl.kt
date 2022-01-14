@@ -16,7 +16,7 @@ import ua.leonidius.garage.mappers.CarDetailMapper
 import ua.leonidius.garage.model.CarDetail
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
-import kotlin.random.Random
+import java.util.*
 
 @Service
 class SearchFacadeImpl : SearchFacade {
@@ -176,5 +176,27 @@ class SearchFacadeImpl : SearchFacade {
 
        return detailMapper.toDto(repository.save(detail), "local")
    }
+
+    override fun updateLocalDetail(id: Int, name: String?, manufacturer: String?, description: String?,
+                                   type: String?, price: Float?): CarDetailDto? {
+
+        val local = repository.findById(id)
+        if (local.isEmpty) return null
+        val detail = local.get()
+
+
+        if (name != null) detail.name = name
+        if (manufacturer != null) detail.manufacturer = manufacturer
+        if (description != null) detail.description = description
+        if (type != null) detail.detailTypeCustomName = type
+        if (price != null) detail.price = price.toDouble()
+
+        // removing from cache
+        if (GarageApplication.cache.containsKey("${id}-local")) {
+            GarageApplication.cache.remove("${id}-local")
+        }
+
+        return detailMapper.toDto(repository.save(detail), "local")
+    }
 
 }

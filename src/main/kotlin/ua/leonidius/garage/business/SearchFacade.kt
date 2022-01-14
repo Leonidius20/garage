@@ -23,4 +23,7 @@ interface SearchFacade {
     fun getLocalDetailById(id: Int): CarDetailDto?
     fun deleteDetail(id: Int)
 
+    fun updateLocalDetail(id: Int, name: String?, manufacturer: String?, description: String?,
+                          type: String?, price: Float?): CarDetailDto?
+
 }

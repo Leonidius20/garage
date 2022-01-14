@@ -9,9 +9,17 @@ query GetById {
   }
 }
 
-mutation Create {
+mutation CreateDetail {
   createDetail(name: "test", manufacturer: "manufucturer", description: "", type: "transmission", price: 3000)
   {
     id
   }
+}
+
+mutation UpdateDetail {
+
+}
+
+mutation DeleteDetail {
+  deleteDetail(id: 107849)
 }

@@ -5,6 +5,7 @@ type Query {
 
 type Mutation {
     createDetail(name: String!, manufacturer: String, description: String, type: String, price: Float): CarDetail
+    updateDetail(id: ID!, name: String, manufacturer: String, description: String, type: String, price: Float): CarDetail
     deleteDetail(id:ID!):ID
 }
 
