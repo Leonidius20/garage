@@ -56,7 +56,7 @@ class SearchFacadeImpl : SearchFacade {
                     // results from 5000 service
                     results.addAll(getService.get(
                         "http://localhost:8082/details?page=${page % 500}"
-                    ).results.map { it.apply { source = "8082" } })
+                    ).results.toTypedArray().slice(page*10..page*10+10).map { it.apply { source = "8082" } })
                 },
             )
 
@@ -124,21 +124,24 @@ class SearchFacadeImpl : SearchFacade {
             }
         }
 
-
-        /*if (source == "8088") {
-            return getService.getOne(
-                "http://localhost:8088/details/${idInt}"
-            ).apply { this.source = "8088" }.also {
-                GarageApplication.cache.put(id, Pair(LocalDate.now(), it))
+        if (source == "8088") {
+            return runBlocking {
+                return@runBlocking getService.getOne(
+                    "${SLOW_SERVICE_URL}/details/${idInt}"
+                ).apply { this.source = "8088" }.also {
+                    GarageApplication.cache.put(id, Pair(LocalDate.now(), it))
+                }
             }
-        }*/
-
-        val local = repository.findById(idInt)
-        if (local.isPresent) {
-            return CarDetailReturnResult(local.get().id!!,
+        } else if (source == "local") {
+            val local = repository.findById(idInt)
+            if (local.isPresent) {
+                return CarDetailReturnResult(local.get().id!!,
                     local.get().price, local.get().name, local.get().description,
-                    local.get().manufacturer, "local").also { GarageApplication.cache.put(id, Pair(LocalDate.now(), it))  }
-        } else throw IllegalArgumentException("No detail with such ID")
+                    local.get().manufacturer, "local").also {
+                        GarageApplication.cache.put(id, Pair(LocalDate.now(), it))
+                    }
+            } else throw IllegalArgumentException("No detail with such ID")
+        } else throw IllegalArgumentException("Invalid data source ${source}")
     }
 
     /*
