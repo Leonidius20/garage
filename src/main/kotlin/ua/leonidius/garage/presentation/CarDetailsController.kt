@@ -1,11 +1,10 @@
 package ua.leonidius.garage.presentation
 
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import ua.leonidius.garage.dto.ErrorDto
 import ua.leonidius.garage.dto.ReturnResult
 import ua.leonidius.garage.business.SearchFacade
+import ua.leonidius.garage.dto.SearchReturnResult
 
 @RestController
 @CrossOrigin(origins = ["*"])
@@ -42,12 +41,12 @@ class CarDetailsController(private val searchFacade: SearchFacade) {
 
     @CrossOrigin
     @GetMapping("/details")
-    fun getAllDetails(@RequestParam page: Int): ResponseEntity<Any> {
+    fun getAllDetails(@RequestParam page: Int): ReturnResult {
         try {
-            return ResponseEntity.ok(searchFacade.getAllDetails(page))
+            return SearchReturnResult(searchFacade.getAllDetails(page))
         } catch (e: Exception) {
             e.printStackTrace()
-            return ResponseEntity(ErrorDto(e.message!!), HttpStatus.INTERNAL_SERVER_ERROR)
+            return ErrorDto(e.message!!)
         }
     }
 
