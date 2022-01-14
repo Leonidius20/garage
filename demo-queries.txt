@@ -1,10 +1,10 @@
 query GetById {
-  detailById(id: 107849){
+  detailById(id: 107848){
     id
     name
     manufacturer
     type
-
+    description
 
   }
 }
@@ -17,9 +17,26 @@ mutation CreateDetail {
 }
 
 mutation UpdateDetail {
-
+  updateDetail(id: 107848, description: "this is a test description2" ) {
+    id
+    description
+  }
 }
 
 mutation DeleteDetail {
   deleteDetail(id: 107849)
+}
+
+query GetFiveUsers {
+  users(page: 0) {
+    id
+    login
+  }
+}
+
+query GetUserById {
+  userById(id: 2) {
+    id
+    login
+  }
 }

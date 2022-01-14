@@ -2,8 +2,8 @@ type Query {
     detailById(id: ID): CarDetail
     details(count: Int): [CarDetail]
 
-    # userById(id: ID): User
-    # userByLogin(login: String): User
+    userById(id: ID): User
+    userByLogin(login: String): User
     users(page: Int): [User]
 
     # orderById(id: ID): Order

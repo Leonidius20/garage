@@ -18,6 +18,14 @@ class UserQuery: GraphQLQueryResolver {
         return userService.getAllUsers(page)
     }
 
+    fun getUserById(id: Int): Optional<UserDto> {
+        return userService.getUserById(id)
+    }
+
+    fun getUserByLogin(login: String): Optional<UserDto> {
+        return userService.getUserByLogin(login)
+    }
+
     /*fun getDetailById(id: Int): Optional<CarDetailDto> {
         val value = detailService.getLocalDetailById(id)
         if (value == null) return Optional.empty()
