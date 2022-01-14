@@ -85,22 +85,29 @@ class SearchFacadeImpl : SearchFacade {
             } // else refetch
         }
 
-        val results = mutableListOf<CarDetailReturnResult>()
+        val results = java.util.Collections.synchronizedList(mutableListOf<CarDetailReturnResult>())
 
-        /*val slowResults = getService.get( // slow service
-            "http://localhost:8088/search?query=$name"
-        ).get().results.map { it.apply { source = "8088" } }
-        results.addAll(slowResults)
-        GarageApplication.cache.putAll(slowResults.map { Pair(LocalDate.now(), it) }.associateBy { "${it.second.id}-8088" })
-
-        // local DB
-        val localResults = repository.findByNameContainingIgnoreCase(name).map {
-            CarDetailReturnResult(it.id!!, it.price, it.name, it.description, it.manufacturer, "local")
+        runBlocking {
+            val tasks = listOf(
+                launch(Dispatchers.IO) {
+                    results.addAll(getService.get( // slow service
+                        "${SLOW_SERVICE_URL}/search?query=$name"
+                    ).results.map { it.apply { source = "8088" } })
+                },
+                launch(Dispatchers.IO) {
+                    results.addAll(repository.findByNameContainingIgnoreCase(name).map {
+                        CarDetailReturnResult(it.id!!, it.price, it.name, it.description, it.manufacturer, "local")
+                    })
+                },
+            )
+            tasks.joinAll()
         }
-        results.addAll(localResults)
-        GarageApplication.cache.putAll(localResults.map { Pair(LocalDate.now(), it) }.associateBy { "${it.second.id}-local" })
 
-        GarageApplication.searchCache[name] = Pair(LocalDate.now(), results)*/
+        GarageApplication.cache.putAll(
+            results.map { Pair(LocalDate.now(), it) }
+                .associateBy { "${it.second.id}-${it.second.source}" })
+
+        GarageApplication.searchCache[name] = Pair(LocalDate.now(), results)
 
         return SearchReturnResult(results)
     }
