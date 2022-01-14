@@ -6,8 +6,8 @@ type Query {
     userByLogin(login: String): User
     users(page: Int): [User]
 
-    # orderById(id: ID): Order
-    # ordersByUserId(userId: ID): [Order]
+    orderById(id: ID): Order
+    ordersByUserId(userId: ID): [Order]
 
 }
 
@@ -16,7 +16,7 @@ type Mutation {
     updateDetail(id: ID!, name: String, manufacturer: String, description: String, type: String, price: Float): CarDetail
     deleteDetail(id:ID!):ID
 
-
+    createOrder(userId: Int!, detailId: Int!, quantity: Int!):Order
 }
 
 type CarDetail {

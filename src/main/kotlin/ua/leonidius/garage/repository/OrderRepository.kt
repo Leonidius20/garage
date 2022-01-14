@@ -7,6 +7,6 @@ import ua.leonidius.garage.model.Order
 @Repository
 interface OrderRepository: JpaRepository<Order, Int> {
 
-
+    fun findByUserId(userId: Int): List<Order>
 
 }
