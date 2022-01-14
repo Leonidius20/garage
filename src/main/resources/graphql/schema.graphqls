@@ -1,0 +1,17 @@
+type Query {
+    detailById(id: ID): Detail
+    details(count: Int): [Detail]
+}
+
+type Detail {
+    id: ID
+    name: String
+    description: String
+    price: Float
+}
+
+type Author {
+    id: ID
+    firstName: String
+    lastName: String
+}

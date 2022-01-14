@@ -12,9 +12,10 @@ import ua.leonidius.garage.business.specifications.сoncrete.MaxPriceSpecificati
 import ua.leonidius.garage.presentation.results.SearchReturnResult
 
 @RestController
+@CrossOrigin(origins = ["*"])
 class CarDetailsController(private val searchFacade: SearchFacade) {
 
-    @CrossOrigin
+    /*@CrossOrigin
     @PostMapping("/details")
     fun addCarDetail(
         @RequestParam name: String,
@@ -24,13 +25,13 @@ class CarDetailsController(private val searchFacade: SearchFacade) {
         @RequestParam type: String,
     ) {
         searchFacade.addCarDetail(name, manufacturer, description, price, type)
-    }
+    }*/
 
-    @CrossOrigin
+    /*@CrossOrigin
     @DeleteMapping("details/{id}")
     fun deleteDetail(@PathVariable id: Int) {
         searchFacade.deleteDetail(id)
-    }
+    }*/
 
     @CrossOrigin
     @GetMapping("/detail")

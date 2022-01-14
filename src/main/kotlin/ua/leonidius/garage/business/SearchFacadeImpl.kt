@@ -1,18 +1,21 @@
 package ua.leonidius.garage.business
 
-import de.qaware.tools.collectioncacheableforspring.CollectionCacheable
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
-import org.springframework.web.bind.annotation.CrossOrigin
 import ua.leonidius.garage.GarageApplication
 import ua.leonidius.garage.business.network.GetService
-import ua.leonidius.garage.data.car_details.CarDetail
 import ua.leonidius.garage.data.car_details.CarDetailRepository
 import ua.leonidius.garage.presentation.results.CarDetailReturnResult
 import ua.leonidius.garage.presentation.results.SearchReturnResult
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
+import java.util.stream.Collectors
 
 @Service
 class SearchFacadeImpl : SearchFacade {
@@ -22,44 +25,50 @@ class SearchFacadeImpl : SearchFacade {
 
     private val getService = GetService()
 
-    private var currentPage = 0
+    private val SLOW_SERVICE_URL = "http://localhost:8088"
 
-    override fun getAllDetails(page: Int): Collection<CarDetailReturnResult> {
-        currentPage = page
-        return getAllDetails().values
-    }
+    override fun getAllDetails(page: Int): Collection<CarDetailReturnResult>  {
 
-    // @CollectionCacheable(cacheNames = ["details"])
-    fun getAllDetails(): Map<String, CarDetailReturnResult> {
-
-        if (GarageApplication.pageCache.containsKey(currentPage)) {
-            return GarageApplication.pageCache.get(currentPage)!!
+        if (GarageApplication.pageCache.containsKey(page)) {
+            val entry = GarageApplication.pageCache[page]!!
+            if (ChronoUnit.DAYS.between(LocalDate.now(), entry.first) <= 1) {
+                return entry.second
+            }
         }
 
+        val results = java.util.Collections.synchronizedList(mutableListOf<CarDetailReturnResult>())
 
-        val results = mutableMapOf<String, CarDetailReturnResult>()
+        runBlocking {
+            val tasks = listOf(
+                launch(Dispatchers.IO) {
+                    // results from slow service
+                    results.addAll(getService
+                        .get("${SLOW_SERVICE_URL}/price-list?page=$page")
+                        .results.map { it.apply { source = "8088" } })
+                },
+                launch(Dispatchers.IO) {
+                    // local results
+                    results.addAll(repository.findAll(PageRequest.of(page, 5)).map {
+                        CarDetailReturnResult(it.id!!, it.price, it.name, it.description, it.manufacturer, "local")
+                    })
+                },
+                launch(Dispatchers.IO) {
+                    // results from 5000 service
+                    results.addAll(getService.get(
+                        "http://localhost:8082/details?page=${page % 500}"
+                    ).results.map { it.apply { source = "8082" } })
+                },
+            )
 
-        results.putAll ( // slow service
-            getService.get(
-                "http://localhost:8088/price-list?page=$currentPage"
-            ).get().results.associate { Pair("${it.id}-8088", it.apply { source = "8088" }) }
-                .also { GarageApplication.cache.putAll(it) }
-        )
+            tasks.joinAll()
+        }
+
+        GarageApplication.cache.putAll(
+            results.map { Pair(LocalDate.now(), it) }
+                .associateBy { "${it.second.id}-${it.second.source}" })
 
 
-        val res = repository.findAll(PageRequest.of(currentPage, 5)).map {
-            CarDetailReturnResult(it.id!!, it.price, it.name, it.description, it.manufacturer, "local")
-        }.associateBy { "${it.id}-local" }
-            .also { GarageApplication.cache.putAll(it) }
-
-
-        results.putAll( // 5000 service
-            getService.get(
-                "http://localhost:8082/details?page=${currentPage % 500}" // TODO: get only 10 results
-            ).get().results.associate { Pair("${it.id}-8082", it.apply { source = "8082" }) }
-        )
-
-        GarageApplication.pageCache.put(currentPage, results)
+        GarageApplication.pageCache.put(page, Pair(LocalDate.now(), results))
 
         return  results
     }
@@ -70,93 +79,85 @@ class SearchFacadeImpl : SearchFacade {
     ): SearchReturnResult {
 
         if (GarageApplication.searchCache.containsKey(name)) {
-            return SearchReturnResult(GarageApplication.searchCache[name]!!.values)
+            val entry = GarageApplication.searchCache[name]!!
+            if (ChronoUnit.DAYS.between(LocalDate.now(), entry.first) <= 1) {
+                return SearchReturnResult(entry.second)
+            } // else refetch
         }
 
-        val results = mutableMapOf<String, CarDetailReturnResult>()
+        val results = mutableListOf<CarDetailReturnResult>()
 
-        results.putAll ( // slow service
-            getService.get(
-                "http://localhost:8088/search?query=$name"
-            ).get().results.associate { Pair("${it.id}-8088", it.apply { source = "8088" }) }
-                .also { GarageApplication.cache.putAll(it) }
-        )
+        /*val slowResults = getService.get( // slow service
+            "http://localhost:8088/search?query=$name"
+        ).get().results.map { it.apply { source = "8088" } }
+        results.addAll(slowResults)
+        GarageApplication.cache.putAll(slowResults.map { Pair(LocalDate.now(), it) }.associateBy { "${it.second.id}-8088" })
 
-        results.putAll(repository.findAll(PageRequest.of(currentPage, 5)).map {
+        // local DB
+        val localResults = repository.findByNameContainingIgnoreCase(name).map {
             CarDetailReturnResult(it.id!!, it.price, it.name, it.description, it.manufacturer, "local")
-        }.associateBy { "${it.id}-local" }
-            .also { GarageApplication.cache.putAll(it) })
+        }
+        results.addAll(localResults)
+        GarageApplication.cache.putAll(localResults.map { Pair(LocalDate.now(), it) }.associateBy { "${it.second.id}-local" })
 
-        GarageApplication.searchCache[name] = results
+        GarageApplication.searchCache[name] = Pair(LocalDate.now(), results)*/
 
-
-        return SearchReturnResult(results.values)
+        return SearchReturnResult(results)
     }
 
-    override fun addCarDetail(
-        name: String, manufacturer: String,
-        description: String, price: Double, type: String,
-    ) {
-        val detail = CarDetail.Builder()
-            .setDetailCustomType(type)
-            .setName(name)
-            .setManufacturer(manufacturer)
-            .setDescription(description)
-            .setPrice(price)
-            .get()
-
-        repository.save(detail)
-    }
-
-    // @Cacheable(cacheNames = ["details"])
     override fun getDetailById(id: String): CarDetailReturnResult {
         val sourceAndId = id.split("-")
         val source = sourceAndId[1]
         val idInt = sourceAndId[0].toInt()
 
         if (GarageApplication.cache.containsKey(id)) {
-            return GarageApplication.cache.get(id)!!
+            val entry = GarageApplication.cache[id]!!
+            if (ChronoUnit.DAYS.between(LocalDate.now(), entry.first) <= 1) {
+                return entry.second
+            }
         }
 
-        // TODO: ckeck the right source
-        if (source == "8088") {
+
+        /*if (source == "8088") {
             return getService.getOne(
                 "http://localhost:8088/details/${idInt}"
-            )
-        }
-
-        /*if (source == "8082") {
-            return getService.getOne(
-                "http://localhost:8082/details/${idInt}"
-            )
+            ).apply { this.source = "8088" }.also {
+                GarageApplication.cache.put(id, Pair(LocalDate.now(), it))
+            }
         }*/
-
-        val results = mutableListOf<CarDetailReturnResult>()
 
         val local = repository.findById(idInt)
         if (local.isPresent) {
-            results.add(
-                CarDetailReturnResult(local.get().id!!,
+            return CarDetailReturnResult(local.get().id!!,
                     local.get().price, local.get().name, local.get().description,
-                    local.get().manufacturer, "local")
-            )
-        }
-
-        results.retainAll { it.id == idInt }
-
-        if (results.isEmpty())
-            throw IllegalArgumentException("No detail with such ID")
-
-        return results[0]
+                    local.get().manufacturer, "local").also { GarageApplication.cache.put(id, Pair(LocalDate.now(), it))  }
+        } else throw IllegalArgumentException("No detail with such ID")
     }
 
-    @CacheEvict("results", allEntries = true)
+    /*
     override fun deleteDetail(id: Int) {
         try {
             repository.deleteById(id)
         } catch (e: Exception) {
             // nothing
         }
-    }
+    }*/
+
+    /*override fun addCarDetail(
+       name: String, manufacturer: String,
+       description: String, price: Double, type: String,
+   ) {
+       val detail = CarDetail.Builder()
+           .setDetailCustomType(type)
+           .setName(name)
+           .setManufacturer(manufacturer)
+           .setDescription(description)
+           .setPrice(price)
+           .get()
+
+       repository.save(detail)
+   }*/
+
+
 
 }

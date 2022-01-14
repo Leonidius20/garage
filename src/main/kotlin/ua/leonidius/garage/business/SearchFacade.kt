@@ -12,11 +12,11 @@ interface SearchFacade {
         name: String
     ): SearchReturnResult
 
-    fun addCarDetail(name: String, manufacturer: String,
-                     description: String, price: Double, type: String)
+    //fun addCarDetail(name: String, manufacturer: String,
+    //                 description: String, price: Double, type: String)
 
     fun getDetailById(id: String): CarDetailReturnResult
 
-    fun deleteDetail(id: Int)
+    //fun deleteDetail(id: Int)
 
 }
