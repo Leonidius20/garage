@@ -1,12 +1,22 @@
 type Query {
     detailById(id: ID): CarDetail
     details(count: Int): [CarDetail]
+
+    # userById(id: ID): User
+    # userByLogin(login: String): User
+    users(page: Int): [User]
+
+    # orderById(id: ID): Order
+    # ordersByUserId(userId: ID): [Order]
+
 }
 
 type Mutation {
     createDetail(name: String!, manufacturer: String, description: String, type: String, price: Float): CarDetail
     updateDetail(id: ID!, name: String, manufacturer: String, description: String, type: String, price: Float): CarDetail
     deleteDetail(id:ID!):ID
+
+
 }
 
 type CarDetail {
@@ -18,8 +28,15 @@ type CarDetail {
     type: String
 }
 
-type Author {
+type User {
     id: ID
-    firstName: String
-    lastName: String
+    login: String
 }
+
+type Order {
+    id: ID
+    user: User
+    detail: CarDetail
+    quantity: Int
+}
+
