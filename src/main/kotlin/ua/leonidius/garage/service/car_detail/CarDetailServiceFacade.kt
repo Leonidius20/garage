@@ -18,8 +18,6 @@ interface CarDetailServiceFacade {
 
     fun getDetailById(id: String): CarDetailDto?
 
-    //fun deleteDetail(id: Int)
-
     fun findDetailsCached(name: String,
                           maxPrice: Float?, minPrice: Float?, manufacturer: String?
     ): List<CarDetailDto>

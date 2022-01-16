@@ -15,24 +15,6 @@ import ua.leonidius.garage.service.car_detail.specifications.сoncrete.MaxPriceS
 @CrossOrigin(origins = ["*"])
 class CarDetailsController(private val carDetailServiceFacade: CarDetailServiceFacade) {
 
-    /*@CrossOrigin
-    @PostMapping("/details")
-    fun addCarDetail(
-        @RequestParam name: String,
-        @RequestParam manufacturer: String,
-        @RequestParam description: String,
-        @RequestParam price: Double,
-        @RequestParam type: String,
-    ) {
-        searchFacade.addCarDetail(name, manufacturer, description, price, type)
-    }*/
-
-    /*@CrossOrigin
-    @DeleteMapping("details/{id}")
-    fun deleteDetail(@PathVariable id: Int) {
-        searchFacade.deleteDetail(id)
-    }*/
-
     @CrossOrigin
     @GetMapping("/detail")
     fun getDetailById(@RequestParam id: String): ReturnResult {

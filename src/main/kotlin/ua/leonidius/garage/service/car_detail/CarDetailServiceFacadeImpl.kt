@@ -61,9 +61,24 @@ class CarDetailServiceFacadeImpl : CarDetailServiceFacade {
                 },
                 launch(Dispatchers.IO) {
                     // results from 5000 service
-                    results.addAll(getService.get(
-                        "http://localhost:8082/details?page=${page % 500}"
-                    ).results.toTypedArray().slice(page*10..page*10+10).map { it.apply { source = "8082" } })
+                    val fiveThousandPage = page / 500
+                    if (GarageApplication.fiveThousandCachedPageNumber == fiveThousandPage) {
+                        results.addAll(GarageApplication.fiveThousandCache
+                            .slice((page-1)*10..(page-1)*10+10))
+                    } else {
+                        val fiveThousandResults = getService.get(
+                            "http://localhost:8082/details?page=${fiveThousandPage}"
+                        ).results.map { it.apply { source = "8082" } }
+
+                        GarageApplication.fiveThousandCachedPageNumber = fiveThousandPage
+                        GarageApplication.fiveThousandCache = fiveThousandResults
+
+                        GarageApplication.cache.putAll(
+                            fiveThousandResults.map { Pair(LocalDate.now(), it) }
+                                .associateBy { "${it.second.id}-${it.second.source}" })
+
+                        results.addAll(fiveThousandResults.slice((page-1)*10..(page-1)*10+10))
+                    }
                 },
             )
 

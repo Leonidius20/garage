@@ -24,17 +24,18 @@ class GarageApplication {
 	companion object {
 		val cache = ConcurrentHashMap<String, Pair<LocalDate, CarDetailDto>>()
 		val pageCache = ConcurrentHashMap<Int, Pair<LocalDate, Collection<CarDetailDto>>>()
-		// val searchCache = ConcurrentHashMap<String, Pair<LocalDate, Collection<CarDetailReturnResult>>>()
+
+		var fiveThousandCachedPageNumber = -1
+		var fiveThousandCache = listOf<CarDetailDto>()
 	}
 
 	@Scheduled(fixedDelay = 86400000, initialDelay = 0) // fixedDelay = 24h
 	fun clearOldCache() {
 		cache.clear()
 		pageCache.clear()
-		// searchCache.clear()
+		fiveThousandCache = listOf<CarDetailDto>()
+		fiveThousandCachedPageNumber = -1
 	}
-
-	//TODO: prefetch first pages
 
 	@Scheduled(fixedDelay = 3600000, initialDelay = 3600000) // every hour
 	fun clearLargeCache() {
