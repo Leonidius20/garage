@@ -61,13 +61,14 @@ class CarDetailsController(private val carDetailServiceFacade: CarDetailServiceF
     @GetMapping("/details/search")
     fun searchForDetailsWithFilters(
         @RequestParam query: String,
-        @RequestParam(required = false) maxPrice: Double?,
-        @RequestParam(required = false) minPrice: Double?,
+        @RequestParam(required = false) maxPrice: Float?,
+        @RequestParam(required = false) minPrice: Float?,
         @RequestParam(required = false) manufacturer: String?,
     ): ReturnResult {
         try {
-            val filter = createFilter(maxPrice, minPrice, manufacturer)
-            return carDetailServiceFacade.findDetailsByNameWithFilter(query, filter)
+            return SearchReturnResult(
+                carDetailServiceFacade.findDetailsByNameWithFilter(query, maxPrice, minPrice, manufacturer)
+            )
         } catch (e: Exception) {
             e.printStackTrace()
             return ErrorDto(e.message!!)
@@ -78,27 +79,15 @@ class CarDetailsController(private val carDetailServiceFacade: CarDetailServiceF
     @GetMapping("search-cached-details")
     fun searchCachedDetails(
         @RequestParam query: String,
-        @RequestParam(required = false) maxPrice: Double?,
-        @RequestParam(required = false) minPrice: Double?,
+        @RequestParam(required = false) maxPrice: Float?,
+        @RequestParam(required = false) minPrice: Float?,
         @RequestParam(required = false) manufacturer: String?,
     ): ReturnResult {
-        val filter = createFilter(maxPrice, minPrice, manufacturer)
-        return carDetailServiceFacade.findDetailsCached(query, filter)
+        return SearchReturnResult(
+            carDetailServiceFacade.findDetailsCached(query, maxPrice, minPrice, manufacturer)
+        )
     }
 
-    private fun createFilter(maxPrice: Double?, minPrice: Double?, manufacturer: String?): Specification<CarDetailDto> {
-        var filter: Specification<CarDetailDto> = TrueSpecification()
 
-        if (maxPrice != null)
-            filter = filter.and(MaxPriceSpecification(maxPrice))
-
-        if (minPrice != null)
-            filter = filter.and(MaxPriceSpecification(minPrice).not())
-
-        if (manufacturer != null)
-            filter = filter.and(ManufacturerSpecification(manufacturer))
-
-        return filter
-    }
 
 }

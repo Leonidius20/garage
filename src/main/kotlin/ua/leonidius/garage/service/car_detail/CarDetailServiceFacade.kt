@@ -10,8 +10,8 @@ interface CarDetailServiceFacade {
 
     fun findDetailsByNameWithFilter(
         name: String,
-        filter: Specification<CarDetailDto>
-    ): SearchReturnResult
+        maxPrice: Float?, minPrice: Float?, manufacturer: String?
+    ): List<CarDetailDto>
 
     fun addCarDetail(name: String, manufacturer: String,
                      description: String, price: Float, type: String): CarDetailDto
@@ -20,7 +20,9 @@ interface CarDetailServiceFacade {
 
     //fun deleteDetail(id: Int)
 
-    fun findDetailsCached(name: String, filter: Specification<CarDetailDto>): SearchReturnResult
+    fun findDetailsCached(name: String,
+                          maxPrice: Float?, minPrice: Float?, manufacturer: String?
+    ): List<CarDetailDto>
 
     fun getLocalDetailById(id: Int): CarDetailDto?
     fun deleteDetail(id: Int)

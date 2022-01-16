@@ -15,6 +15,9 @@ import ua.leonidius.garage.dto.SearchReturnResult
 import ua.leonidius.garage.mappers.CarDetailMapper
 import ua.leonidius.garage.model.CarDetail
 import ua.leonidius.garage.service.car_detail.specifications.Specification
+import ua.leonidius.garage.service.car_detail.specifications.TrueSpecification
+import ua.leonidius.garage.service.car_detail.specifications.сoncrete.ManufacturerSpecification
+import ua.leonidius.garage.service.car_detail.specifications.сoncrete.MaxPriceSpecification
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
@@ -82,8 +85,8 @@ class CarDetailServiceFacadeImpl : CarDetailServiceFacade {
      */
     override fun findDetailsByNameWithFilter(
         name: String,
-        filter: Specification<CarDetailDto>
-    ): SearchReturnResult {
+        maxPrice: Float?, minPrice: Float?, manufacturer: String?
+    ): List<CarDetailDto> {
         val results = java.util.Collections.synchronizedList(mutableListOf<CarDetailDto>())
 
         runBlocking {
@@ -106,11 +109,12 @@ class CarDetailServiceFacadeImpl : CarDetailServiceFacade {
             results.map { Pair(LocalDate.now(), it) }
                 .associateBy { "${it.second.id}-${it.second.source}" })
 
+        val filter = createFilter(maxPrice, minPrice, manufacturer)
         results.retainAll { filter.isSatisfiedBy(it) }
 
         // GarageApplication.searchCache[name] = Pair(LocalDate.now(), results)
 
-        return SearchReturnResult(results)
+        return results
     }
 
     /**
@@ -118,16 +122,17 @@ class CarDetailServiceFacadeImpl : CarDetailServiceFacade {
      */
     override fun findDetailsCached(
         name: String,
-        filter: Specification<CarDetailDto>
-    ): SearchReturnResult {
+        maxPrice: Float?, minPrice: Float?, manufacturer: String?
+    ): List<CarDetailDto> {
         val query = name.trim()
         val results = GarageApplication.cache.filter {
             it.value.second.name.startsWith(query, ignoreCase = true) }
             .map { it.value.second }.toMutableList()
 
+        val filter = createFilter(maxPrice, minPrice, manufacturer)
         results.retainAll { filter.isSatisfiedBy(it) }
 
-        return SearchReturnResult(results)
+        return results
     }
 
     override fun getLocalDetailById(id: Int): CarDetailDto? {
@@ -204,6 +209,21 @@ class CarDetailServiceFacadeImpl : CarDetailServiceFacade {
         }
 
         return detailMapper.toDto(repository.save(detail), "local")
+    }
+
+    private fun createFilter(maxPrice: Float?, minPrice: Float?, manufacturer: String?): Specification<CarDetailDto> {
+        var filter: Specification<CarDetailDto> = TrueSpecification()
+
+        if (maxPrice != null)
+            filter = filter.and(MaxPriceSpecification(maxPrice.toDouble()))
+
+        if (minPrice != null)
+            filter = filter.and(MaxPriceSpecification(minPrice.toDouble()).not())
+
+        if (manufacturer != null)
+            filter = filter.and(ManufacturerSpecification(manufacturer))
+
+        return filter
     }
 
 }

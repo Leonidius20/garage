@@ -1,6 +1,8 @@
 type Query {
     detailById(id: ID): CarDetail
-    details(count: Int): [CarDetail]
+    details(page: Int): [CarDetail]
+    detailsByName(name: String!, maxPrice: Float, minPrice: Float, manufacturer: String): [CarDetail]
+    cachedDetailsByName(name: String!, maxPrice: Float, minPrice: Float, manufacturer: String): [CarDetail]
 
     userById(id: ID): User
     userByLogin(login: String): User
