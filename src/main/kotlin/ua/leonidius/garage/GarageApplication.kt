@@ -34,6 +34,8 @@ class GarageApplication {
 		// searchCache.clear()
 	}
 
+	//TODO: prefetch first pages
+
 	@Scheduled(fixedDelay = 3600000, initialDelay = 3600000) // every hour
 	fun clearLargeCache() {
 		if (cache.size > 10000) cache.clear()

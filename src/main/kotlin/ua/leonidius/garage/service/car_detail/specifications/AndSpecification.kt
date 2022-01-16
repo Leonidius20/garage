@@ -1,4 +1,4 @@
-package ua.leonidius.garage.business.specifications
+package ua.leonidius.garage.service.car_detail.specifications
 
 internal class AndSpecification<T>(
     private val first: Specification<T>,

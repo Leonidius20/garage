@@ -3,16 +3,15 @@ package ua.leonidius.garage.graphql.user
 import com.coxautodev.graphql.tools.GraphQLQueryResolver
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import ua.leonidius.garage.dto.CarDetailDto
 import ua.leonidius.garage.dto.UserDto
-import ua.leonidius.garage.service.UserService
+import ua.leonidius.garage.service.user.UserServiceFacade
 import java.util.*
 
 @Component
 class UserQuery: GraphQLQueryResolver {
 
     @Autowired
-    private lateinit var userService: UserService
+    private lateinit var userService: UserServiceFacade
 
     fun getUsers(page: Int): List<UserDto> {
         return userService.getAllUsers(page)

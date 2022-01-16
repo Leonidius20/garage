@@ -1,7 +1,7 @@
-package ua.leonidius.garage.business.specifications.сoncrete
+package ua.leonidius.garage.service.car_detail.specifications.сoncrete
 
 import ua.leonidius.garage.dto.CarDetailDto
-import ua.leonidius.garage.business.specifications.CompositeSpecification
+import ua.leonidius.garage.service.car_detail.specifications.CompositeSpecification
 
 class ManufacturerSpecification(private val manufacturer: String):
     CompositeSpecification<CarDetailDto>() {

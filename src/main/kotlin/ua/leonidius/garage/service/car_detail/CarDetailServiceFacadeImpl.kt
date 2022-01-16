@@ -1,4 +1,4 @@
-package ua.leonidius.garage.business
+package ua.leonidius.garage.service.car_detail
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.joinAll
@@ -8,18 +8,18 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import ua.leonidius.garage.GarageApplication
-import ua.leonidius.garage.business.network.GetService
+import ua.leonidius.garage.service.car_detail.network.GetService
 import ua.leonidius.garage.repository.CarDetailRepository
 import ua.leonidius.garage.dto.CarDetailDto
 import ua.leonidius.garage.dto.SearchReturnResult
 import ua.leonidius.garage.mappers.CarDetailMapper
 import ua.leonidius.garage.model.CarDetail
+import ua.leonidius.garage.service.car_detail.specifications.Specification
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
-import java.util.*
 
 @Service
-class SearchFacadeImpl : SearchFacade {
+class CarDetailServiceFacadeImpl : CarDetailServiceFacade {
 
     @Autowired
     private lateinit var repository: CarDetailRepository
@@ -77,17 +77,13 @@ class SearchFacadeImpl : SearchFacade {
         return  results
     }
 
+    /**
+     * returns details directly without using cache
+     */
     override fun findDetailsByNameWithFilter(
-        name: String
+        name: String,
+        filter: Specification<CarDetailDto>
     ): SearchReturnResult {
-
-        /*if (GarageApplication.searchCache.containsKey(name)) {
-            val entry = GarageApplication.searchCache[name]!!
-            if (ChronoUnit.DAYS.between(LocalDate.now(), entry.first) <= 1) {
-                return SearchReturnResult(entry.second)
-            } // else refetch
-        }*/
-
         val results = java.util.Collections.synchronizedList(mutableListOf<CarDetailDto>())
 
         runBlocking {
@@ -110,16 +106,27 @@ class SearchFacadeImpl : SearchFacade {
             results.map { Pair(LocalDate.now(), it) }
                 .associateBy { "${it.second.id}-${it.second.source}" })
 
+        results.retainAll { filter.isSatisfiedBy(it) }
+
         // GarageApplication.searchCache[name] = Pair(LocalDate.now(), results)
 
         return SearchReturnResult(results)
     }
 
-    override fun findDetailsCached(name: String): SearchReturnResult {
+    /**
+     * returns details only from cache
+     */
+    override fun findDetailsCached(
+        name: String,
+        filter: Specification<CarDetailDto>
+    ): SearchReturnResult {
         val query = name.trim()
         val results = GarageApplication.cache.filter {
             it.value.second.name.startsWith(query, ignoreCase = true) }
-            .map { it.value.second }
+            .map { it.value.second }.toMutableList()
+
+        results.retainAll { filter.isSatisfiedBy(it) }
+
         return SearchReturnResult(results)
     }
 

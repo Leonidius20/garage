@@ -1,4 +1,4 @@
-package ua.leonidius.garage.business.request_handlers
+package ua.leonidius.garage.service.car_detail.request_handlers
 
 abstract class BaseHandler: RequestHandler {
 

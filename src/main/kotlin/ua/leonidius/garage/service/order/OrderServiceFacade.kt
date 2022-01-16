@@ -1,18 +1,19 @@
-package ua.leonidius.garage.service
+package ua.leonidius.garage.service.order
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import ua.leonidius.garage.business.SearchFacade
 import ua.leonidius.garage.dto.CarDetailDto
 import ua.leonidius.garage.dto.OrderDto
 import ua.leonidius.garage.dto.UserDto
 import ua.leonidius.garage.mappers.OrderMapper
 import ua.leonidius.garage.model.Order
 import ua.leonidius.garage.repository.OrderRepository
+import ua.leonidius.garage.service.user.UserServiceFacade
+import ua.leonidius.garage.service.car_detail.CarDetailServiceFacade
 import java.util.*
 
 @Service
-class OrderService {
+class OrderServiceFacade {
 
     @Autowired
     private lateinit var orderRepository: OrderRepository
@@ -21,10 +22,10 @@ class OrderService {
     private lateinit var orderMapper: OrderMapper
 
     @Autowired
-    private lateinit var userService: UserService
+    private lateinit var userService: UserServiceFacade
 
     @Autowired
-    private lateinit var carDetailService: SearchFacade
+    private lateinit var carDetailService: CarDetailServiceFacade
 
     fun getById(id: Int): Optional<OrderDto> {
         val orderOpt = orderRepository.findById(id)

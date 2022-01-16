@@ -1,4 +1,4 @@
-package ua.leonidius.garage.business.request_handlers
+package ua.leonidius.garage.service.car_detail.request_handlers
 
 import ua.leonidius.garage.dto.SearchReturnResult
 

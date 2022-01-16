@@ -1,6 +1,6 @@
-package ua.leonidius.garage.business.specifications.сoncrete
+package ua.leonidius.garage.service.car_detail.specifications.сoncrete
 
-import ua.leonidius.garage.business.specifications.CompositeSpecification
+import ua.leonidius.garage.service.car_detail.specifications.CompositeSpecification
 import ua.leonidius.garage.dto.CarDetailDto
 
 class MaxPriceSpecification(private val maxPrice: Double): CompositeSpecification<CarDetailDto>() {

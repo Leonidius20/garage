@@ -1,4 +1,4 @@
-package ua.leonidius.garage.service
+package ua.leonidius.garage.service.user
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageRequest
@@ -7,10 +7,9 @@ import ua.leonidius.garage.dto.UserDto
 import ua.leonidius.garage.mappers.UserMapper
 import ua.leonidius.garage.repository.UserRepository
 import java.util.*
-import kotlin.math.log
 
 @Service
-class UserService {
+class UserServiceFacade {
 
     @Autowired
     private lateinit var userRepository: UserRepository

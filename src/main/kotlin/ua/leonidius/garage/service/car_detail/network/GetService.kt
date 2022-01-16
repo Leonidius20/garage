@@ -1,4 +1,4 @@
-package ua.leonidius.garage.business.network
+package ua.leonidius.garage.service.car_detail.network
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
