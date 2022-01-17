@@ -12,8 +12,9 @@ class OrderMutation: GraphQLMutationResolver {
     @Autowired
     private lateinit var orderService: OrderServiceFacade
 
-    fun createOrder(userId: Int, detailId: Int, quantity: Int): OrderDto {
-        return orderService.createOrder(userId, detailId, quantity)
+    fun createOrder(userId: Int, detailId: Int, quantity: Int, source: String): OrderDto? {
+        if (userId < 0 || detailId < 0 || quantity < 0) return null
+        return orderService.createOrder(userId, detailId, quantity, source)
     }
 
 }

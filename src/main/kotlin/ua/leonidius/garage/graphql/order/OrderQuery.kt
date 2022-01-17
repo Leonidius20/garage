@@ -14,10 +14,12 @@ class OrderQuery: GraphQLQueryResolver {
     private lateinit var orderService: OrderServiceFacade
 
     fun getOrderById(id: Int): Optional<OrderDto> {
+        if (id < 0) return Optional.empty()
         return orderService.getById(id)
     }
 
     fun getOrdersByUserId(userId: Int): List<OrderDto> {
+        if (userId < 0) return emptyList()
         return orderService.getByUserId(userId)
     }
 

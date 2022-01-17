@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service
 import ua.leonidius.garage.dto.CarDetailDto
 import ua.leonidius.garage.dto.OrderDto
 import ua.leonidius.garage.dto.UserDto
+import ua.leonidius.garage.exception.InvalidIdException
 import ua.leonidius.garage.mappers.OrderMapper
 import ua.leonidius.garage.model.Order
 import ua.leonidius.garage.repository.OrderRepository
@@ -43,8 +44,20 @@ class OrderServiceFacade {
         }
     }
 
-    fun createOrder(userId: Int, detailId: Int, quantity: Int): OrderDto {
-        var order = Order(userId = userId, detailId = detailId, quantity = quantity)
+    fun createOrder(userId: Int, detailId: Int, quantity: Int, source: String): OrderDto {
+        if (!userService.userExists(userId)) {
+            throw InvalidIdException("User with id $userId doesn't exist")
+        }
+
+        if (source != "local" && source != "8088" && source != "8082") {
+            throw InvalidIdException("Invalid source")
+        }
+
+        if (!carDetailService.carDetailExists(detailId, source)) {
+            throw InvalidIdException("No detail with ID $detailId in source $source")
+        }
+
+        var order = Order(userId = userId, detailId = detailId, quantity = quantity, source = source)
         order = orderRepository.save(order)
 
         return orderMapper.toDto(order, getUserForOrder(order), getDetailForOrder(order))

@@ -16,4 +16,6 @@ class Order(
 
     val quantity: Int,
 
+    val source: String,
+
 )

@@ -13,12 +13,14 @@ class CarDetailQuery : GraphQLQueryResolver {
     @Autowired
     private lateinit var detailService: CarDetailServiceFacade
 
-    fun getDetails(page: Int): List<CarDetailDto> {
+    fun getDetails(page: Int): List<CarDetailDto>? {
+        if (page < 1) return null
         return detailService.getAllDetails(page).stream().toList()
     }
 
-    fun getDetailById(id: Int): Optional<CarDetailDto> {
-        val value = detailService.getLocalDetailById(id)
+    fun getDetailById(id: Int, source: String): Optional<CarDetailDto> {
+        if (id < 0) return Optional.empty()
+        val value = detailService.getDetailById("$id-$source")
         if (value == null) return Optional.empty()
         else return Optional.of(value)
     }

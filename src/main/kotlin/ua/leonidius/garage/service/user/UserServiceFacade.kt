@@ -35,4 +35,6 @@ class UserServiceFacade {
         else return Optional.of(userMapper.toDto(user.get()))
     }
 
+    fun userExists(id: Int) = userRepository.existsById(id)
+
 }

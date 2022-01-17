@@ -12,6 +12,7 @@ import ua.leonidius.garage.service.car_detail.network.GetService
 import ua.leonidius.garage.repository.CarDetailRepository
 import ua.leonidius.garage.dto.CarDetailDto
 import ua.leonidius.garage.dto.SearchReturnResult
+import ua.leonidius.garage.exception.InvalidIdException
 import ua.leonidius.garage.mappers.CarDetailMapper
 import ua.leonidius.garage.model.CarDetail
 import ua.leonidius.garage.service.car_detail.specifications.Specification
@@ -151,6 +152,8 @@ class CarDetailServiceFacadeImpl : CarDetailServiceFacade {
     }
 
     override fun getLocalDetailById(id: Int): CarDetailDto? {
+        if (id < 0)
+            return null
         return getDetailById("${id}-local")
     }
 
@@ -186,7 +189,9 @@ class CarDetailServiceFacadeImpl : CarDetailServiceFacade {
 
 
     override fun deleteDetail(id: Int) {
-        repository.deleteById(id)
+        if (repository.existsById(id))
+            repository.deleteById(id)
+        else throw InvalidIdException("No item with such an ID exists")
     }
 
     override fun addCarDetail(
@@ -239,6 +244,20 @@ class CarDetailServiceFacadeImpl : CarDetailServiceFacade {
             filter = filter.and(ManufacturerSpecification(manufacturer))
 
         return filter
+    }
+
+    override fun carDetailExists(id: Int, source: String): Boolean {
+        if (source == "local") {
+            return repository.existsById(id)
+        } else {
+            try {
+                val detail = getDetailById("$id-$source")
+                return detail != null
+            } catch (e: Exception) {
+                e.printStackTrace()
+                return false
+            }
+        }
     }
 
 }

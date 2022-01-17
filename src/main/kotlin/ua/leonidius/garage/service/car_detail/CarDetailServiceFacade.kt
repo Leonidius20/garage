@@ -28,4 +28,6 @@ interface CarDetailServiceFacade {
     fun updateLocalDetail(id: Int, name: String?, manufacturer: String?, description: String?,
                           type: String?, price: Float?): CarDetailDto?
 
+    fun carDetailExists(id: Int, source: String = "local"): Boolean
+
 }

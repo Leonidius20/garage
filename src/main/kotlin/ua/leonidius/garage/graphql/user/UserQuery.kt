@@ -13,15 +13,18 @@ class UserQuery: GraphQLQueryResolver {
     @Autowired
     private lateinit var userService: UserServiceFacade
 
-    fun getUsers(page: Int): List<UserDto> {
+    fun getUsers(page: Int): List<UserDto>? {
+        if (page < 0) return null
         return userService.getAllUsers(page)
     }
 
     fun getUserById(id: Int): Optional<UserDto> {
+        if (id < 0) return Optional.empty()
         return userService.getUserById(id)
     }
 
     fun getUserByLogin(login: String): Optional<UserDto> {
+        if (login.isEmpty()) return Optional.empty()
         return userService.getUserByLogin(login)
     }
 
