@@ -68,7 +68,7 @@ class OrderServiceFacade {
     }
 
     private fun getDetailForOrder(order: Order): CarDetailDto {
-        return carDetailService.getLocalDetailById(order.detailId)!!
+        return carDetailService.getDetailById("${order.detailId}-${order.source}")!!
     }
 
 }

@@ -66,7 +66,7 @@ class CarDetailsController(private val carDetailServiceFacade: CarDetailServiceF
         @RequestParam(required = false) manufacturer: String?,
     ): ReturnResult {
         return SearchReturnResult(
-            carDetailServiceFacade.findDetailsCached(query, maxPrice, minPrice, manufacturer)
+            carDetailServiceFacade.findDetailsByNameWithFilter(query, maxPrice, minPrice, manufacturer)
         )
     }
 

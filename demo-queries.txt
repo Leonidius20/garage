@@ -1,47 +1,80 @@
+# Welcome to GraphiQL
+#
+# GraphiQL is an in-browser tool for writing, validating, and
+# testing GraphQL queries.
+#
+# Type queries into this side of the screen, and you will see intelligent
+# typeaheads aware of the current GraphQL type schema and live syntax and
+# validation errors highlighted within the text.
+#
+# GraphQL queries typically start with a "{" character. Lines that starts
+# with a # are ignored.
+#
+# An example GraphQL query might look like:
+#
+#     {
+#       field(arg: "value") {
+#         subField
+#       }
+#     }
+#
+# Keyboard shortcuts:
+#
+#  Prettify Query:  Shift-Ctrl-P (or press the prettify button above)
+#
+#       Run Query:  Ctrl-Enter (or press the play button above)
+#
+#   Auto Complete:  Ctrl-Space (or just start typing)
+#
 query GetById {
-  detailById(id: 107848){
+  detailById(id: 107848, source: "local"){
     id
     name
-    manufacturer 
+    manufacturer
     type
     description
-  
+    source
   }
 }
 
 query GetAll {
   details(page: 1) {
+    id
     name
     price
+    source
   }
 }
 
 query Search {
-  cachedDetailsByName(name: "4", maxPrice: 333) {
+  detailsByName(name: "bruh", maxPrice: 333) {
     name
     price
   }
 }
 
 mutation CreateDetail {
-  createDetail(name: "test", manufacturer: "manufucturer", description: "", type: "transmission", price: 3000) 
+  createDetail(name: "test4", manufacturer: "manufucturer", description: "", type: "transmission", price: 3000)
   {
     id
+    source
   }
 }
 
 mutation UpdateDetail {
-  updateDetail(id: 107848, description: "this is a test description2" ) {
+  updateDetail(id: 1048, source: "8082", price: 401, description: "this is a test description2", name: "9f679f97b" ) {
     id
     description
+    name
+    price
   }
 }
 
 mutation DeleteDetail {
-  deleteDetail(id: 107849) 
+  deleteDetail(id: 12, source: "8082")
 }
 
-query GetFiveUsers {
+query GetUsersPaged {
   users(page: 0) {
     id
     login
@@ -64,13 +97,14 @@ query GetUserByLogin {
 
 
 query OrderById {
-  orderById(id: 3) {
+  orderById(id: 1) {
     user {
       login
     }
     detail {
       name
       description
+      source
     }
     quantity
   }
@@ -91,7 +125,12 @@ query OrdersByUserId {
 }
 
 mutation CreateOrder {
-  createOrder(userId:2, detailId: 2, quantity: 1) {
+  createOrder(userId:2, detailId: 10, source: "8088", quantity: 5) {
     id
+    detail {
+      name
+      id
+      source
+    }
   }
 }

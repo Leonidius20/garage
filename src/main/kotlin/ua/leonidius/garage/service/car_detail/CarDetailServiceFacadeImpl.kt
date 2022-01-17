@@ -7,21 +7,18 @@ import kotlinx.coroutines.runBlocking
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
-import ua.leonidius.garage.GarageApplication
-import ua.leonidius.garage.service.car_detail.network.GetService
-import ua.leonidius.garage.repository.CarDetailRepository
+import org.springframework.web.util.UriComponentsBuilder
 import ua.leonidius.garage.dto.CarDetailDto
-import ua.leonidius.garage.dto.SearchReturnResult
 import ua.leonidius.garage.exception.InvalidIdException
 import ua.leonidius.garage.mappers.CarDetailMapper
 import ua.leonidius.garage.model.CarDetail
+import ua.leonidius.garage.repository.CarDetailRepository
 import ua.leonidius.garage.service.cached_car_detail.CachedCarDetailService
+import ua.leonidius.garage.service.car_detail.network.GetService
 import ua.leonidius.garage.service.car_detail.specifications.Specification
 import ua.leonidius.garage.service.car_detail.specifications.TrueSpecification
 import ua.leonidius.garage.service.car_detail.specifications.сoncrete.ManufacturerSpecification
 import ua.leonidius.garage.service.car_detail.specifications.сoncrete.MaxPriceSpecification
-import java.time.LocalDate
-import java.time.temporal.ChronoUnit
 
 @Service
 class CarDetailServiceFacadeImpl : CarDetailServiceFacade {
@@ -41,51 +38,17 @@ class CarDetailServiceFacadeImpl : CarDetailServiceFacade {
     private val FIVE_THOUSAND_SERVICE_URL = "http://localhost:8082"
 
     override fun getAllDetails(page: Int): Collection<CarDetailDto>  {
-
-        /*if (GarageApplication.pageCache.containsKey(page)) {
-            val entry = GarageApplication.pageCache[page]!!
-            if (ChronoUnit.DAYS.between(LocalDate.now(), entry.first) <= 1) {
-                return entry.second
-            }
-        }*/
-
         val results = java.util.Collections.synchronizedList(mutableListOf<CarDetailDto>())
 
         runBlocking {
             val tasks = listOf(
-                /*launch(Dispatchers.IO) {
-                    // results from slow service
-                    results.addAll(getService
-                        .get("${SLOW_SERVICE_URL}/price-list?page=$page")
-                        .results.map { it.apply { source = "8088" } })
-                },*/
+
                 launch(Dispatchers.IO) {
                     // local results
                     results.addAll(repository.findAll(PageRequest.of(page, 5)).map {
                         detailMapper.toDto(it, "local")
                     })
                 },
-                /*launch(Dispatchers.IO) {
-                    // results from 5000 service
-                    val fiveThousandPage = page / 500
-                    if (GarageApplication.fiveThousandCachedPageNumber == fiveThousandPage) {
-                        results.addAll(GarageApplication.fiveThousandCache
-                            .slice((page-1)*10..(page-1)*10+10))
-                    } else {
-                        val fiveThousandResults = getService.get(
-                            "http://localhost:8082/details?page=${fiveThousandPage}"
-                        ).results.map { it.apply { source = "8082" } }
-
-                        GarageApplication.fiveThousandCachedPageNumber = fiveThousandPage
-                        GarageApplication.fiveThousandCache = fiveThousandResults
-
-                        GarageApplication.cache.putAll(
-                            fiveThousandResults.map { Pair(LocalDate.now(), it) }
-                                .associateBy { "${it.second.id}-${it.second.source}" })
-
-                        results.addAll(fiveThousandResults.slice((page-1)*10..(page-1)*10+10))
-                    }
-                },*/
                 launch(Dispatchers.IO) {
                     results.addAll(cacheService.getPaged(page).map { detailMapper.toDto(it) })
                 }
@@ -94,19 +57,9 @@ class CarDetailServiceFacadeImpl : CarDetailServiceFacade {
             tasks.joinAll()
         }
 
-        //GarageApplication.cache.putAll(
-        //    results.map { Pair(LocalDate.now(), it) }
-       //         .associateBy { "${it.second.id}-${it.second.source}" })
-
-
-        //GarageApplication.pageCache.put(page, Pair(LocalDate.now(), results))
-
         return  results
     }
 
-    /**
-     * returns details directly without using cache
-     */
     override fun findDetailsByNameWithFilter(
         name: String,
         maxPrice: Float?, minPrice: Float?, manufacturer: String?
@@ -115,11 +68,6 @@ class CarDetailServiceFacadeImpl : CarDetailServiceFacade {
 
         runBlocking {
             val tasks = listOf(
-                /*launch(Dispatchers.IO) {
-                    results.addAll(getService.get( // slow service
-                        "${SLOW_SERVICE_URL}/search?query=$name"
-                    ).results.map { it.apply { source = "8088" } })
-                },*/
                 launch(Dispatchers.IO) {
                     results.addAll(repository.findByNameContainingIgnoreCase(name).map {
                         detailMapper.toDto(it, "local")
@@ -134,35 +82,12 @@ class CarDetailServiceFacadeImpl : CarDetailServiceFacade {
             tasks.joinAll()
         }
 
-        //GarageApplication.cache.putAll(
-       //     results.map { Pair(LocalDate.now(), it) }
-       //         .associateBy { "${it.second.id}-${it.second.source}" })
-
-        val filter = createFilter(maxPrice, minPrice, manufacturer)
-        results.retainAll { filter.isSatisfiedBy(it) }
-
-        // GarageApplication.searchCache[name] = Pair(LocalDate.now(), results)
-
-        return results
-    }
-
-    /**
-     * returns details only from cache
-     */
-    override fun findDetailsCached(
-        name: String,
-        maxPrice: Float?, minPrice: Float?, manufacturer: String?
-    ): List<CarDetailDto> {
-        val query = name.trim()
-        val results = GarageApplication.cache.filter {
-            it.value.second.name.startsWith(query, ignoreCase = true) }
-            .map { it.value.second }.toMutableList()
-
         val filter = createFilter(maxPrice, minPrice, manufacturer)
         results.retainAll { filter.isSatisfiedBy(it) }
 
         return results
     }
+
 
     override fun getLocalDetailById(id: Int): CarDetailDto? {
         if (id < 0)
@@ -175,40 +100,38 @@ class CarDetailServiceFacadeImpl : CarDetailServiceFacade {
         val source = sourceAndId[1]
         val idInt = sourceAndId[0].toInt()
 
-        /*if (GarageApplication.cache.containsKey(id)) {
-            val entry = GarageApplication.cache[id]!!
-            if (ChronoUnit.DAYS.between(LocalDate.now(), entry.first) <= 1) {
-                return entry.second
-            }
-        }*/
+        if (idInt < 0) return null
+        if (source != "local" && source != "8088" && source != "8082") return null
 
         if (source == "8088" || source == "8082") {
             val optional = cacheService.getFromCacheByIdAndSource(idInt, source)
             if (optional.isEmpty) return null
             return detailMapper.toDto(optional.get())
-
-            /*return runBlocking {
-                return@runBlocking getService.getOne(
-                    "${SLOW_SERVICE_URL}/details/${idInt}"
-                ).apply { this.source = "8088" }.also {
-                    GarageApplication.cache.put(id, Pair(LocalDate.now(), it))
-                }
-            }*/
         } else if (source == "local") {
             val local = repository.findById(idInt)
             if (local.isPresent) {
-                return detailMapper.toDto(local.get(), "local").also {
-                        // GarageApplication.cache.put(id, Pair(LocalDate.now(), it))
-                    }
+                return detailMapper.toDto(local.get(), "local")
             } else return null // doesn't exist
         } else throw IllegalArgumentException("Invalid data source $source")
     }
 
 
-    override fun deleteDetail(id: Int) {
-        if (repository.existsById(id))
-            repository.deleteById(id)
-        else throw InvalidIdException("No item with such an ID exists")
+    override fun deleteDetail(id: Int, source: String): Boolean {
+        if (source == "local") {
+            if (repository.existsById(id)) {
+                repository.deleteById(id)
+                return true
+            } else return false
+            // else throw InvalidIdException("No item with such an ID exists")
+        } else if (source == "8088") {
+            throw InvalidIdException("Source $source doesn't support deleting details")
+        } else if (source == "8082") {
+            if (getService.delete("$FIVE_THOUSAND_SERVICE_URL/delete/$id")) {
+                cacheService.deleteFromCache(id, source)
+                return true
+            }
+            else return false
+        } else throw InvalidIdException("Source $source does not exist")
     }
 
     override fun addCarDetail(
@@ -226,26 +149,63 @@ class CarDetailServiceFacadeImpl : CarDetailServiceFacade {
        return detailMapper.toDto(repository.save(detail), "local")
    }
 
-    override fun updateLocalDetail(id: Int, name: String?, manufacturer: String?, description: String?,
+    override fun updateDetail(id: Int, source: String, name: String?, manufacturer: String?, description: String?,
                                    type: String?, price: Float?): CarDetailDto? {
+        if (!validateId(id) || !validateSource(source)) return null
 
-        val local = repository.findById(id)
-        if (local.isEmpty) return null
-        val detail = local.get()
+        if (source == "local") {
+            val local = repository.findById(id)
+            if (local.isEmpty) return null
+            val detail = local.get()
 
+            name?.also { detail.name = it }
+            manufacturer?.also { detail.manufacturer = it }
+            description?.also { detail.description = it }
+            type?.also { detail.detailTypeCustomName = it }
+            price?.also { detail.price = it.toDouble() }
 
-        if (name != null) detail.name = name
-        if (manufacturer != null) detail.manufacturer = manufacturer
-        if (description != null) detail.description = description
-        if (type != null) detail.detailTypeCustomName = type
-        if (price != null) detail.price = price.toDouble()
+            return detailMapper.toDto(repository.save(detail), "local")
+        } else if (source == "8088") {
+            throw InvalidIdException("Source $source doesn't support updating details")
+        } else if (source == "8082") {
+            val params = mutableMapOf<String, Any>()
+            var urlTemplate = UriComponentsBuilder.fromHttpUrl(
+                "$FIVE_THOUSAND_SERVICE_URL/modify/$id"
+            )
 
-        // removing from cache
-        if (GarageApplication.cache.containsKey("${id}-local")) {
-            GarageApplication.cache.remove("${id}-local")
-        }
+            name?.also {
+                params["name"] = it
+                urlTemplate = urlTemplate.queryParam("name", it)
+            }
+            manufacturer?.also {
+                params["manufacturer"] = it
+                urlTemplate = urlTemplate.queryParam("manufacturer", it)
+            }
+            description?.also {
+                params["description"] = it
+                urlTemplate = urlTemplate.queryParam("description", it)
+            }
+            type?.also {
+                params["type"] = it
+                urlTemplate = urlTemplate.queryParam("type", it)
+            }
+            price?.also {
+                params["price"] = it
+                urlTemplate = urlTemplate.queryParam("price", it)
+            }
 
-        return detailMapper.toDto(repository.save(detail), "local")
+            println(params.toString())
+
+            val result = runBlocking { getService.getOneWithParams(
+                urlTemplate.encode().toUriString(),
+                params
+            ) }
+            if (result == null) return null
+
+            cacheService.updateInCache(result.apply { this.source = "8082" })
+
+            return result
+        } else throw InvalidIdException("Source $source doesn't exist")
     }
 
     private fun createFilter(maxPrice: Float?, minPrice: Float?, manufacturer: String?): Specification<CarDetailDto> {
@@ -287,6 +247,19 @@ class CarDetailServiceFacadeImpl : CarDetailServiceFacade {
         return runBlocking {
             getService.getInteger(FIVE_THOUSAND_SERVICE_URL + "/num-pages")
         }
+    }
+
+    private fun validateSource(source: String): Boolean {
+        if (source != "local" && source != "8088" && source != "8082")
+            return false
+        return true
+            // throw InvalidIdException("Source with name $source does not exist")
+    }
+
+    private fun validateId(id: Int): Boolean {
+        if (id < 0) return false
+        return true
+    // throw InvalidIdException("ID cannot be a negative number")
     }
 
 }

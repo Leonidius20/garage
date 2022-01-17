@@ -18,14 +18,10 @@ interface CarDetailServiceFacade {
 
     fun getDetailById(id: String): CarDetailDto?
 
-    fun findDetailsCached(name: String,
-                          maxPrice: Float?, minPrice: Float?, manufacturer: String?
-    ): List<CarDetailDto>
-
     fun getLocalDetailById(id: Int): CarDetailDto?
-    fun deleteDetail(id: Int)
+    fun deleteDetail(id: Int, source: String): Boolean
 
-    fun updateLocalDetail(id: Int, name: String?, manufacturer: String?, description: String?,
+    fun updateDetail(id: Int, source: String, name: String?, manufacturer: String?, description: String?,
                           type: String?, price: Float?): CarDetailDto?
 
     fun carDetailExists(id: Int, source: String = "local"): Boolean

@@ -24,10 +24,20 @@ open class GetService {
         }
     }
 
+    suspend fun getOneWithParams(url: String, params: Map<String, *>): CarDetailDto? {
+        return withContext(Dispatchers.IO) {
+            return@withContext restTemplate.getForObject(url, CarDetailDto::class.java, params)!!
+        }
+    }
+
     suspend fun getInteger(url: String): Int {
         return withContext(Dispatchers.IO) {
             return@withContext restTemplate.getForObject(url, Int::class.java)!!
         }
+    }
+
+    fun delete(url: String): Boolean {
+        return restTemplate.getForObject(url, Boolean::class.java)!!
     }
 
 }

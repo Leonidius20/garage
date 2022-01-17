@@ -38,7 +38,7 @@ class StartupListener : ApplicationListener<ContextRefreshedEvent?> {
 
         val numSlowPages = carDetailServiceFacade.getNumberOfSlowPages()
 
-        for (page in 1..numSlowPages) {
+        for (page in 1..numSlowPages + 1) {
             val results = runBlocking {
                 getService
                     .get("${SLOW_SERVICE_URL}/price-list?page=$page")
@@ -48,7 +48,7 @@ class StartupListener : ApplicationListener<ContextRefreshedEvent?> {
         }
 
         val num5kPages = carDetailServiceFacade.getNumberOfFiveThousandPages()
-        for (page in 1..num5kPages) {
+        for (page in 1..num5kPages + 1) {
             val results = runBlocking {
                 getService
                     .get("${FIVE_THOUSAND_SERVICE_URL}/details?page=$page")

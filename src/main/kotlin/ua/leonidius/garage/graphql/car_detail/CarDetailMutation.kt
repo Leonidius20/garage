@@ -19,17 +19,17 @@ class CarDetailMutation: GraphQLMutationResolver {
         return detailService.addCarDetail(name, manufacturer, description, price, type)
     }
 
-    fun deleteDetail(id: Int): Int? {
+    fun deleteDetail(id: Int, source: String): Int? {
         if (id < 0) return null
-        detailService.deleteDetail(id)
+        if (!detailService.deleteDetail(id, source)) return null
         return id
     }
 
-    fun updateDetail(id: Int, name: String?, manufacturer: String?, description: String?,
+    fun updateDetail(id: Int, source: String, name: String?, manufacturer: String?, description: String?,
                      type: String?, price: Float?): Optional<CarDetailDto> {
         if (id < 0 || (price != null && price < 0)) return Optional.empty()
 
-        val detail = detailService.updateLocalDetail(id, name, manufacturer, description, type, price)
+        val detail = detailService.updateDetail(id, source, name, manufacturer, description, type, price)
         if (detail == null) return Optional.empty()
         else return Optional.of(detail)
     }

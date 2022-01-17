@@ -19,18 +19,22 @@ class CarDetailQuery : GraphQLQueryResolver {
     }
 
     fun getDetailById(id: Int, source: String): Optional<CarDetailDto> {
-        if (id < 0) return Optional.empty()
-        val value = detailService.getDetailById("$id-$source")
-        if (value == null) return Optional.empty()
-        else return Optional.of(value)
+        try {
+            val value = detailService.getDetailById("$id-$source")
+            if (value == null) return Optional.empty()
+            else return Optional.of(value)
+        } catch (e: Exception) {
+            return Optional.empty()
+        }
     }
 
     fun detailsByName(name: String, maxPrice: Float?, minPrice: Float?, manufacturer: String?): List<CarDetailDto> {
+        if (name.isEmpty()) return emptyList()
         return detailService.findDetailsByNameWithFilter(name, maxPrice, minPrice, manufacturer)
     }
 
-    fun cachedDetailsByName(name: String, maxPrice: Float?, minPrice: Float?, manufacturer: String?): List<CarDetailDto> {
+    /*fun cachedDetailsByName(name: String, maxPrice: Float?, minPrice: Float?, manufacturer: String?): List<CarDetailDto> {
         return detailService.findDetailsCached(name, maxPrice, minPrice, manufacturer)
-    }
+    }*/
 
 }

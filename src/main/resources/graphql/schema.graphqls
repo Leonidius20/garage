@@ -2,7 +2,7 @@ type Query {
     detailById(id: ID, source: String! = "local"): CarDetail
     details(page: Int): [CarDetail]
     detailsByName(name: String!, maxPrice: Float, minPrice: Float, manufacturer: String): [CarDetail]
-    cachedDetailsByName(name: String!, maxPrice: Float, minPrice: Float, manufacturer: String): [CarDetail]
+    # cachedDetailsByName(name: String!, maxPrice: Float, minPrice: Float, manufacturer: String): [CarDetail]
 
     userById(id: ID): User
     userByLogin(login: String): User
@@ -15,10 +15,10 @@ type Query {
 
 type Mutation {
     createDetail(name: String!, manufacturer: String, description: String, type: String, price: Float): CarDetail
-    updateDetail(id: ID!, name: String, manufacturer: String, description: String, type: String, price: Float): CarDetail
-    deleteDetail(id:ID!):ID
+    updateDetail(id: ID!, source: String!, name: String, manufacturer: String, description: String, type: String, price: Float): CarDetail
+    deleteDetail(id:ID!, source: String!):ID
 
-    createOrder(userId: Int!, detailId: Int!, quantity: Int!, source: String! = "local"):Order
+    createOrder(userId: Int!, detailId: Int!, quantity: Int!, source: String!):Order
 }
 
 type CarDetail {

@@ -46,4 +46,14 @@ class CachedCarDetailService {
         return result
     }
 
+    fun deleteFromCache(id: Int, source: String) {
+        val embId = CachedCarDetailId(id, source)
+        if (repository.existsById(embId))
+            repository.deleteById(embId)
+    }
+
+    fun updateInCache(detailDto: CarDetailDto) {
+        repository.save(mapper.fromDtoToCached(detailDto))
+    }
+
 }
