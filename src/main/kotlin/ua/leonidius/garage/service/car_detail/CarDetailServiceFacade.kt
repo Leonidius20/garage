@@ -32,4 +32,6 @@ interface CarDetailServiceFacade {
 
     fun getNumberOfSlowPages(): Int
 
+    fun getNumberOfFiveThousandPages(): Int
+
 }

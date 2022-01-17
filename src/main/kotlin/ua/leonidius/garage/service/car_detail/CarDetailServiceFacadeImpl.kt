@@ -15,6 +15,7 @@ import ua.leonidius.garage.dto.SearchReturnResult
 import ua.leonidius.garage.exception.InvalidIdException
 import ua.leonidius.garage.mappers.CarDetailMapper
 import ua.leonidius.garage.model.CarDetail
+import ua.leonidius.garage.service.cached_car_detail.CachedCarDetailService
 import ua.leonidius.garage.service.car_detail.specifications.Specification
 import ua.leonidius.garage.service.car_detail.specifications.TrueSpecification
 import ua.leonidius.garage.service.car_detail.specifications.сoncrete.ManufacturerSpecification
@@ -29,38 +30,42 @@ class CarDetailServiceFacadeImpl : CarDetailServiceFacade {
     private lateinit var repository: CarDetailRepository
 
     @Autowired
+    private lateinit var cacheService: CachedCarDetailService
+
+    @Autowired
     private lateinit var detailMapper: CarDetailMapper
 
     private val getService = GetService()
 
     private val SLOW_SERVICE_URL = "http://localhost:8088"
+    private val FIVE_THOUSAND_SERVICE_URL = "http://localhost:8082"
 
     override fun getAllDetails(page: Int): Collection<CarDetailDto>  {
 
-        if (GarageApplication.pageCache.containsKey(page)) {
+        /*if (GarageApplication.pageCache.containsKey(page)) {
             val entry = GarageApplication.pageCache[page]!!
             if (ChronoUnit.DAYS.between(LocalDate.now(), entry.first) <= 1) {
                 return entry.second
             }
-        }
+        }*/
 
         val results = java.util.Collections.synchronizedList(mutableListOf<CarDetailDto>())
 
         runBlocking {
             val tasks = listOf(
-                launch(Dispatchers.IO) {
+                /*launch(Dispatchers.IO) {
                     // results from slow service
                     results.addAll(getService
                         .get("${SLOW_SERVICE_URL}/price-list?page=$page")
                         .results.map { it.apply { source = "8088" } })
-                },
+                },*/
                 launch(Dispatchers.IO) {
                     // local results
                     results.addAll(repository.findAll(PageRequest.of(page, 5)).map {
                         detailMapper.toDto(it, "local")
                     })
                 },
-                launch(Dispatchers.IO) {
+                /*launch(Dispatchers.IO) {
                     // results from 5000 service
                     val fiveThousandPage = page / 500
                     if (GarageApplication.fiveThousandCachedPageNumber == fiveThousandPage) {
@@ -80,18 +85,21 @@ class CarDetailServiceFacadeImpl : CarDetailServiceFacade {
 
                         results.addAll(fiveThousandResults.slice((page-1)*10..(page-1)*10+10))
                     }
-                },
+                },*/
+                launch(Dispatchers.IO) {
+                    results.addAll(cacheService.getPaged(page).map { detailMapper.toDto(it) })
+                }
             )
 
             tasks.joinAll()
         }
 
-        GarageApplication.cache.putAll(
-            results.map { Pair(LocalDate.now(), it) }
-                .associateBy { "${it.second.id}-${it.second.source}" })
+        //GarageApplication.cache.putAll(
+        //    results.map { Pair(LocalDate.now(), it) }
+       //         .associateBy { "${it.second.id}-${it.second.source}" })
 
 
-        GarageApplication.pageCache.put(page, Pair(LocalDate.now(), results))
+        //GarageApplication.pageCache.put(page, Pair(LocalDate.now(), results))
 
         return  results
     }
@@ -107,23 +115,28 @@ class CarDetailServiceFacadeImpl : CarDetailServiceFacade {
 
         runBlocking {
             val tasks = listOf(
-                launch(Dispatchers.IO) {
+                /*launch(Dispatchers.IO) {
                     results.addAll(getService.get( // slow service
                         "${SLOW_SERVICE_URL}/search?query=$name"
                     ).results.map { it.apply { source = "8088" } })
-                },
+                },*/
                 launch(Dispatchers.IO) {
                     results.addAll(repository.findByNameContainingIgnoreCase(name).map {
                         detailMapper.toDto(it, "local")
+                    })
+                },
+                launch(Dispatchers.IO) {
+                    results.addAll(cacheService.searchByName(name).map {
+                        detailMapper.toDto(it)
                     })
                 },
             )
             tasks.joinAll()
         }
 
-        GarageApplication.cache.putAll(
-            results.map { Pair(LocalDate.now(), it) }
-                .associateBy { "${it.second.id}-${it.second.source}" })
+        //GarageApplication.cache.putAll(
+       //     results.map { Pair(LocalDate.now(), it) }
+       //         .associateBy { "${it.second.id}-${it.second.source}" })
 
         val filter = createFilter(maxPrice, minPrice, manufacturer)
         results.retainAll { filter.isSatisfiedBy(it) }
@@ -162,29 +175,33 @@ class CarDetailServiceFacadeImpl : CarDetailServiceFacade {
         val source = sourceAndId[1]
         val idInt = sourceAndId[0].toInt()
 
-        if (GarageApplication.cache.containsKey(id)) {
+        /*if (GarageApplication.cache.containsKey(id)) {
             val entry = GarageApplication.cache[id]!!
             if (ChronoUnit.DAYS.between(LocalDate.now(), entry.first) <= 1) {
                 return entry.second
             }
-        }
+        }*/
 
-        if (source == "8088") {
-            return runBlocking {
+        if (source == "8088" || source == "8082") {
+            val optional = cacheService.getFromCacheByIdAndSource(idInt, source)
+            if (optional.isEmpty) return null
+            return detailMapper.toDto(optional.get())
+
+            /*return runBlocking {
                 return@runBlocking getService.getOne(
                     "${SLOW_SERVICE_URL}/details/${idInt}"
                 ).apply { this.source = "8088" }.also {
                     GarageApplication.cache.put(id, Pair(LocalDate.now(), it))
                 }
-            }
+            }*/
         } else if (source == "local") {
             val local = repository.findById(idInt)
             if (local.isPresent) {
                 return detailMapper.toDto(local.get(), "local").also {
-                        GarageApplication.cache.put(id, Pair(LocalDate.now(), it))
+                        // GarageApplication.cache.put(id, Pair(LocalDate.now(), it))
                     }
             } else return null // doesn't exist
-        } else throw IllegalArgumentException("Invalid data source ${source}")
+        } else throw IllegalArgumentException("Invalid data source $source")
     }
 
 
@@ -263,6 +280,12 @@ class CarDetailServiceFacadeImpl : CarDetailServiceFacade {
     override fun getNumberOfSlowPages(): Int {
         return runBlocking {
             getService.getInteger(SLOW_SERVICE_URL + "/num-pages")
+        }
+    }
+
+    override fun getNumberOfFiveThousandPages(): Int {
+        return runBlocking {
+            getService.getInteger(FIVE_THOUSAND_SERVICE_URL + "/num-pages")
         }
     }
 

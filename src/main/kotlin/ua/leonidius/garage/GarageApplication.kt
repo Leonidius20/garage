@@ -1,5 +1,6 @@
 package ua.leonidius.garage
 
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
@@ -11,6 +12,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 import org.springframework.web.filter.CorsFilter
 import ua.leonidius.garage.dto.CarDetailDto
 import ua.leonidius.garage.graphql.car_detail.CarDetailQuery
+import ua.leonidius.garage.service.cached_car_detail.CachedCarDetailService
 import java.time.LocalDate
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -29,7 +31,7 @@ class GarageApplication {
 		var fiveThousandCache = listOf<CarDetailDto>()
 	}
 
-	@Scheduled(fixedDelay = 86400000, initialDelay = 0) // fixedDelay = 24h
+	@Scheduled(fixedDelay = 86400000, initialDelay = 86400000) // fixedDelay = 24h
 	fun clearOldCache() {
 		// TODO
 		cache.clear()

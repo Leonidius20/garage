@@ -20,4 +20,9 @@ class CarDetailMapper {
             detailDto.name, detailDto.description, detailDto.manufacturer, fiveThousandPage)
     }
 
+    fun toDto(cached: CachedCarDetail): CarDetailDto {
+        return CarDetailDto(cached.embId.id, cached.price, cached.name,
+            cached.description, cached.manufacturer!!, null, cached.embId.source, null)
+    }
+
 }
