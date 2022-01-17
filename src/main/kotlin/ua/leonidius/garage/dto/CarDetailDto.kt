@@ -8,4 +8,5 @@ data class CarDetailDto(
     var manufacturer: String,
     var type: String?,
     var source: String?,
+    var fiveThousandPage: Int?
 ): ReturnResult

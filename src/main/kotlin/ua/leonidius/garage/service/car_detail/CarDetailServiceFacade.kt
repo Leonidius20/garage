@@ -30,4 +30,6 @@ interface CarDetailServiceFacade {
 
     fun carDetailExists(id: Int, source: String = "local"): Boolean
 
+    fun getNumberOfSlowPages(): Int
+
 }

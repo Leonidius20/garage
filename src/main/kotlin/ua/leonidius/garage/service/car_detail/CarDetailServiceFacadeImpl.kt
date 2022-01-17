@@ -260,4 +260,10 @@ class CarDetailServiceFacadeImpl : CarDetailServiceFacade {
         }
     }
 
+    override fun getNumberOfSlowPages(): Int {
+        return runBlocking {
+            getService.getInteger(SLOW_SERVICE_URL + "/num-pages")
+        }
+    }
+
 }

@@ -24,4 +24,10 @@ open class GetService {
         }
     }
 
+    suspend fun getInteger(url: String): Int {
+        return withContext(Dispatchers.IO) {
+            return@withContext restTemplate.getForObject(url, Int::class.java)!!
+        }
+    }
+
 }

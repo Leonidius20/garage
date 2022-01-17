@@ -31,6 +31,7 @@ class GarageApplication {
 
 	@Scheduled(fixedDelay = 86400000, initialDelay = 0) // fixedDelay = 24h
 	fun clearOldCache() {
+		// TODO
 		cache.clear()
 		pageCache.clear()
 		fiveThousandCache = listOf<CarDetailDto>()
